@@ -18,6 +18,8 @@ package client
 
 import (
 	"context"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -37,6 +39,20 @@ type Result struct {
 	Name   string
 	Access map[string]int
 	Err    []error
+}
+
+type sortableResult []Result
+
+func (s sortableResult) Len() int      { return len(s) }
+func (s sortableResult) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s sortableResult) Less(i, j int) bool {
+	ret := strings.Compare(s[i].Name, s[j].Name)
+	if ret > 0 {
+		return false
+	} else if ret == 0 {
+		return i < j
+	}
+	return true
 }
 
 func CheckResourceAccess(ctx context.Context, authClient *authv1.AuthorizationV1Client, grs []GroupResource, verbs []string) (results []Result, err error) {
@@ -126,6 +142,8 @@ func CheckResourceAccess(ctx context.Context, authClient *authv1.AuthorizationV1
 	for gr := range resultsChan {
 		results = append(results, gr)
 	}
+
+	sort.Stable(sortableResult(results))
 
 	return
 }
