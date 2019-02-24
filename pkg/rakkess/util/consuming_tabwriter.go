@@ -195,6 +195,10 @@ const (
 	// and ending in ';') as single characters (width = 1).
 	FilterHTML uint = 1 << iota
 
+	// Smash escaped text to zero width, but output the whole text unescaped.
+	// This is useful to colorize output in terminals.
+	CollapseEscape
+
 	// Strip Escape characters bracketing escaped text segments
 	// instead of passing them through unchanged with the text.
 	StripEscape
@@ -472,9 +476,13 @@ func (b *Writer) startEscape(ch byte) {
 func (b *Writer) endEscape() {
 	switch b.endChar {
 	case Escape:
-		b.updateWidth()
-		if b.flags&StripEscape == 0 {
-			b.cell.width -= 2 // don't count the Escape chars
+		if b.flags&CollapseEscape == 0 {
+			b.updateWidth()
+			if b.flags&StripEscape == 0 {
+				b.cell.width -= 2 // don't count the Escape chars
+			}
+		} else {
+			b.pos = len(b.buf)
 		}
 	case '>': // tag of zero width
 	case ';':
