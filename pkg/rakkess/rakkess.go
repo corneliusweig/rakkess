@@ -27,6 +27,10 @@ import (
 )
 
 func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
+	if err := util.ValidateVerbs(opts.Verbs); err != nil {
+		return err
+	}
+
 	grs, err := client.FetchAvailableGroupResources(opts)
 	if err != nil {
 		return errors.Wrap(err, "fetch available group resources")
