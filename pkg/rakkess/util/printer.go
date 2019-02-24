@@ -47,9 +47,9 @@ func PrintResults(out io.Writer, requestedVerbs []string, results []client.Resul
 func humanreadableAccessCode(code int) string {
 	switch code {
 	case client.AccessAllowed:
-		return "yes"
+		return "✔" // ✓
 	case client.AccessDenied:
-		return "no"
+		return "✖" // ✕
 	case client.AccessNotApplicable:
 		return ""
 	case client.AccessRequestErr:
