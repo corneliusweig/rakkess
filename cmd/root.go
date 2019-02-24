@@ -30,6 +30,7 @@ import (
 )
 
 var (
+	rakkessOptions = options.NewRakkessOptions()
 	v              string
 )
 
@@ -46,6 +47,10 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithCancel(context.Background())
 		catchCtrC(cancel)
+
+		if err := rakkess.Rakkess(ctx, rakkessOptions); err != nil {
+			logrus.Fatal(err)
+		}
 	},
 }
 
@@ -63,8 +68,14 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
 
+	// todo check that only allowed verbs are given
+	// get, list, watch, create, update, delete, proxy, "*"
+	rootCmd.Flags().StringSliceVar(&rakkessOptions.Verbs, "verbs", []string{"list", "create", "delete"}, "show access right for a given verb")
+
+	rakkessOptions.ConfigFlags.AddFlags(rootCmd.Flags())
+
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := SetUpLogs(os.Stderr, v); err != nil {
+		if err := SetUpLogs(rakkessOptions.Streams.ErrOut, v); err != nil {
 			return err
 		}
 		return nil
