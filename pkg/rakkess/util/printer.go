@@ -18,10 +18,11 @@ package util
 
 import (
 	"fmt"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 	"io"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 )
 
 func PrintResults(out io.Writer, requestedVerbs []string, results []client.Result) {

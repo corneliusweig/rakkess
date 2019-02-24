@@ -21,7 +21,7 @@ import (
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/kubernetes/typed/authorization/v1"
+	v1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
 type RakkessOptions struct {

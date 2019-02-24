@@ -19,14 +19,15 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/corneliusweig/rakkess/pkg/rakkess"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"io"
-	"os"
 )
 
 var (

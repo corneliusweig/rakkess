@@ -18,6 +18,7 @@ package client
 
 import (
 	"fmt"
+
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
