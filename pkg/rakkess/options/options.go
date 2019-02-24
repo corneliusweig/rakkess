@@ -17,8 +17,11 @@ limitations under the License.
 package options
 
 import (
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"os"
+
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
 type RakkessOptions struct {
@@ -36,4 +39,21 @@ func NewRakkessOptions() *RakkessOptions {
 			ErrOut: os.Stderr,
 		},
 	}
+}
+
+func (o *RakkessOptions) GetAuthClient() (v1.SelfSubjectAccessReviewInterface, error) {
+	restConfig, err := o.ConfigFlags.ToRESTConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	restConfig.QPS = 50
+	restConfig.Burst = 250
+
+	authClient := v1.NewForConfigOrDie(restConfig)
+	return authClient.SelfSubjectAccessReviews(), nil
+}
+
+func (o *RakkessOptions) DiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
+	return o.ConfigFlags.ToDiscoveryClient()
 }

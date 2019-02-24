@@ -55,13 +55,10 @@ func (s sortableResult) Less(i, j int) bool {
 	return true
 }
 
-func CheckResourceAccess(ctx context.Context, authClient *authv1.AuthorizationV1Client, grs []GroupResource, verbs []string) (results []Result, err error) {
-
+func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string) (results []Result, err error) {
 	group := sync.WaitGroup{}
 	semaphore := make(chan struct{}, 20)
 	resultsChan := make(chan Result)
-
-	reviews := authClient.SelfSubjectAccessReviews()
 
 	// todo correct namespace
 	namespace := ""
@@ -116,7 +113,7 @@ func CheckResourceAccess(ctx context.Context, authClient *authv1.AuthorizationV1
 						},
 					},
 				}
-				review, e := reviews.Create(review)
+				review, e := sar.Create(review)
 				if e != nil {
 					errs = append(errs, e)
 					access[v] = AccessRequestErr

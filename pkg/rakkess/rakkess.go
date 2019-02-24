@@ -24,28 +24,23 @@ import (
 	"github.com/corneliusweig/rakkess/pkg/rakkess/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
 func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
-	grs, err := client.FetchAvailableGroupResources(opts.ConfigFlags)
+	grs, err := client.FetchAvailableGroupResources(opts)
 	if err != nil {
 		return errors.Wrap(err, "fetch available group resources")
 	}
 	logrus.Info(grs)
 
-	restConfig, err := opts.ConfigFlags.ToRESTConfig()
+	authClient, err := opts.GetAuthClient()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "get auth client")
 	}
 
-	restConfig.QPS = 50
-	restConfig.Burst = 250
-
-	authClient := v1.NewForConfigOrDie(restConfig)
 	results, err := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "check resource access")
 	}
 
 	util.PrintResults(opts.Streams.Out, opts.Verbs, results)

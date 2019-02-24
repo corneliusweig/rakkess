@@ -18,11 +18,11 @@ package client
 
 import (
 	"fmt"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // GroupResource contains the APIGroup and APIResource
@@ -39,8 +39,8 @@ func (g GroupResource) fullName() string {
 	return fmt.Sprintf("%s.%s", g.APIResource.Name, g.APIGroup)
 }
 
-func FetchAvailableGroupResources(flags *genericclioptions.ConfigFlags) ([]GroupResource, error) {
-	client, err := flags.ToDiscoveryClient()
+func FetchAvailableGroupResources(opts *options.RakkessOptions) ([]GroupResource, error) {
+	client, err := opts.DiscoveryClient()
 	if err != nil {
 		return nil, errors.Wrap(err, "discovery client")
 	}
@@ -48,7 +48,7 @@ func FetchAvailableGroupResources(flags *genericclioptions.ConfigFlags) ([]Group
 	client.Invalidate()
 
 	var resourcesFetcher func() ([]*metav1.APIResourceList, error)
-	if flags.Namespace == nil || *flags.Namespace == "" {
+	if opts.ConfigFlags.Namespace == nil || *opts.ConfigFlags.Namespace == "" {
 		resourcesFetcher = client.ServerPreferredResources
 	} else {
 		resourcesFetcher = client.ServerPreferredNamespacedResources
