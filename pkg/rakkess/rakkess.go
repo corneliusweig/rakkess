@@ -18,11 +18,13 @@ package rakkess
 
 import (
 	"context"
+
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"k8s.io/client-go/kubernetes/typed/authorization/v1"
+	v1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
 func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
@@ -41,10 +43,12 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 	restConfig.Burst = 250
 
 	authClient := v1.NewForConfigOrDie(restConfig)
-	_, err := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs)
+	results, err := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs)
 	if err != nil {
 		return err
 	}
+
+	util.PrintResults(opts.Streams.Out, opts.Verbs, results)
 
 	return nil
 }
