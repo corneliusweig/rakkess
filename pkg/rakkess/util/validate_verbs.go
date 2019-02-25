@@ -19,11 +19,12 @@ package util
 import (
 	"fmt"
 
+	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 func ValidateVerbs(verbs []string) error {
-	valid := sets.NewString("get", "list", "watch", "create", "update", "delete", "proxy")
+	valid := sets.NewString(constants.ValidVerbs...)
 	given := sets.NewString(verbs...)
 	difference := given.Difference(valid)
 

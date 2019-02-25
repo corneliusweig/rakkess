@@ -21,3 +21,15 @@ import "github.com/sirupsen/logrus"
 const (
 	DefaultLogLevel = logrus.WarnLevel
 )
+
+var (
+	ValidVerbs = []string{
+		"get",
+		"list",
+		"watch",
+		"create",
+		"update",
+		"delete",
+		"proxy",
+	}
+)
