@@ -40,11 +40,16 @@ Show access for all resources
 Also see [Usage](doc/USAGE.md).
 
 ## Installation
+There are several ways to install `rakkess`. The recommended installation method is via `krew`.
 
 ### Via krew
+Krew is a `kubectl` plugin manager. If you have not yet installed `krew`, get it at
+[https://github.com/GoogleContainerTools/krew](https://github.com/GoogleContainerTools/krew).
+Then installation is as simple as
 ```bash
 kubectl krew install access-matrix
 ```
+The plugin will be available as `kubectl access-matrix`, see [doc/USAGE](doc/USAGE.md) for further details.
 
 ### Binaries
 When using the binaries for installation, also have a look at [doc/USAGE](doc/USAGE.md).
