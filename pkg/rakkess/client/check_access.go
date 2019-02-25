@@ -55,17 +55,22 @@ func (s sortableResult) Less(i, j int) bool {
 	return true
 }
 
-func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string) (results []Result, err error) {
+func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (results []Result, err error) {
 	group := sync.WaitGroup{}
 	semaphore := make(chan struct{}, 20)
 	resultsChan := make(chan Result)
 
-	// todo correct namespace
-	namespace := ""
+	var ns string
+	if namespace == nil {
+		ns = ""
+	} else {
+		ns = *namespace
+	}
 	for _, gr := range grs {
-		namespace := namespace
-		gr := gr
 		group.Add(1)
+		// copy captured variables
+		namespace := ns
+		gr := gr
 		go func(ctx context.Context, allowed chan<- Result) {
 			defer group.Done()
 

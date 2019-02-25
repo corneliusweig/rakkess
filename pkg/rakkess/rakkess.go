@@ -42,7 +42,7 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 		return errors.Wrap(err, "get auth client")
 	}
 
-	results, err := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs)
+	results, err := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs, opts.ConfigFlags.Namespace)
 	if err != nil {
 		return errors.Wrap(err, "check resource access")
 	}

@@ -64,7 +64,6 @@ func Execute() {
 	}
 }
 
-// todo namespace should work
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
 
