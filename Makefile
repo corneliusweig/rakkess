@@ -70,7 +70,7 @@ $(BUILDDIR)/$(PROJECT)-%-amd64: $(GO_FILES) $(BUILDDIR)
 	GO111MODULE=on GOARCH=amd64 CGO_ENABLED=0 GOOS=$* go build -ldflags $(GO_LDFLAGS) -o $@ main.go
 
 install: $(BUILDDIR)/$(PROJECT)-$(GOOS)-amd64
-	@mv -i $< $(GOPATH)/bin/
+	@mv -i $< $(GOPATH)/bin/$(PROJECT)
 
 .PHONY: lint
 lint:
