@@ -18,9 +18,11 @@ package util
 
 import (
 	"bytes"
+	"io"
+	"testing"
+
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type accessResult map[string]int
@@ -48,10 +50,11 @@ const HEADER = "NAME       GET  LIST\n"
 
 func TestPrintResults(t *testing.T) {
 	tests := []struct {
-		name     string
-		verbs    []string
-		given    []client.Result
-		expected string
+		name          string
+		verbs         []string
+		given         []client.Result
+		expected      string
+		expectedColor string
 	}{
 		{
 			"single result, all allowed",
@@ -60,6 +63,7 @@ func TestPrintResults(t *testing.T) {
 				{Name: "resource1", Access: buildAccess().allowed("get", "list").get()},
 			},
 			HEADER + "resource1  ✔    ✔\n",
+			HEADER + "resource1  \033[32m✔\033[0m    \033[32m✔\033[0m\n",
 		},
 		{
 			"single result, all forbidden",
@@ -68,6 +72,7 @@ func TestPrintResults(t *testing.T) {
 				{Name: "resource1", Access: buildAccess().denied("get", "list").get()},
 			},
 			HEADER + "resource1  ✖    ✖\n",
+			HEADER + "resource1  \033[31m✖\033[0m    \033[31m✖\033[0m\n",
 		},
 		{
 			"single result, all not applicable",
@@ -76,6 +81,7 @@ func TestPrintResults(t *testing.T) {
 				{Name: "resource1", Access: buildAccess().withResult(client.AccessNotApplicable, "get", "list").get()},
 			},
 			HEADER + "resource1       \n",
+			HEADER + "resource1  \033[0m\033[0m     \033[0m\033[0m\n",
 		},
 		{
 			"single result, all ERR",
@@ -84,6 +90,7 @@ func TestPrintResults(t *testing.T) {
 				{Name: "resource1", Access: buildAccess().withResult(client.AccessRequestErr, "get", "list").get()},
 			},
 			HEADER + "resource1  ERR  ERR\n",
+			HEADER + "resource1  \033[35mERR\033[0m  \033[35mERR\033[0m\n",
 		},
 		{
 			"single result, mixed",
@@ -92,6 +99,7 @@ func TestPrintResults(t *testing.T) {
 				{Name: "resource1", Access: buildAccess().allowed("list").denied("get").get()},
 			},
 			HEADER + "resource1  ✖    ✔\n",
+			"",
 		},
 		{
 			"many results",
@@ -102,6 +110,7 @@ func TestPrintResults(t *testing.T) {
 				{Name: "resource3", Access: buildAccess().denied("get").get()},
 			},
 			"NAME       GET\nresource1  ✖\nresource2  ✔\nresource3  ✖\n",
+			"",
 		},
 	}
 
@@ -112,6 +121,24 @@ func TestPrintResults(t *testing.T) {
 			PrintResults(buf, test.verbs, test.given)
 
 			assert.Equal(t, test.expected, buf.String())
+		})
+	}
+
+	for _, test := range tests[0:4] {
+		isTerminal := IsTerminal
+		IsTerminal = func(w io.Writer) bool {
+			return true
+		}
+		defer func() {
+			IsTerminal = isTerminal
+		}()
+
+		t.Run(test.name, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+
+			PrintResults(buf, test.verbs, test.given)
+
+			assert.Equal(t, test.expectedColor, buf.String())
 		})
 	}
 }

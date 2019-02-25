@@ -65,11 +65,10 @@ func Execute() {
 }
 
 // todo namespace should work
-// todo colored output
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
 
-	rootCmd.Flags().StringSliceVar(&rakkessOptions.Verbs, "verbs", []string{"list", "create", "patch", "delete"}, "show access right for a given verb")
+	rootCmd.Flags().StringSliceVar(&rakkessOptions.Verbs, "verbs", []string{"list", "create", "update", "delete"}, "show access right for a given verb")
 
 	rakkessOptions.ConfigFlags.AddFlags(rootCmd.Flags())
 

@@ -19,14 +19,26 @@ package util
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
+type color int
+
+const (
+	red    = color(31)
+	green  = color(32)
+	purple = color(35)
+	none   = color(0)
+)
+
+var IsTerminal = isTerminal
+
 func PrintResults(out io.Writer, requestedVerbs []string, results []client.Result) {
-	w := tabwriter.NewWriter(out, 4, 8, 2, ' ', 0)
+	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape^StripEscape)
 	defer w.Flush()
 
 	fmt.Fprint(w, "NAME")
@@ -35,10 +47,15 @@ func PrintResults(out io.Writer, requestedVerbs []string, results []client.Resul
 	}
 	fmt.Fprint(w, "\n")
 
+	codeConverter := humanreadableAccessCode
+	if IsTerminal(out) {
+		codeConverter = colorHumanreadableAccessCode
+	}
+
 	for _, r := range results {
 		fmt.Fprintf(w, "%s", r.Name)
 		for _, v := range requestedVerbs {
-			fmt.Fprintf(w, "\t%s", humanreadableAccessCode(r.Access[v]))
+			fmt.Fprintf(w, "\t%s", codeConverter(r.Access[v]))
 		}
 		fmt.Fprint(w, "\n")
 	}
@@ -57,4 +74,29 @@ func humanreadableAccessCode(code int) string {
 	default:
 		panic("unknown access code")
 	}
+}
+
+func isTerminal(w io.Writer) bool {
+	if f, ok := w.(*os.File); ok {
+		return terminal.IsTerminal(int(f.Fd()))
+	}
+	return false
+}
+
+func colorHumanreadableAccessCode(code int) string {
+	return fmt.Sprintf("\xff\033[%dm\xff%s\xff\033[0m\xff", codeToColor(code), humanreadableAccessCode(code))
+}
+
+func codeToColor(code int) color {
+	switch code {
+	case client.AccessAllowed:
+		return green
+	case client.AccessDenied:
+		return red
+	case client.AccessNotApplicable:
+		return none
+	case client.AccessRequestErr:
+		return purple
+	}
+	return none
 }
