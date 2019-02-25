@@ -8,7 +8,7 @@ This is what `rakkess` is for.
 It lists access rights for the current user for all server resources.
 
 ## Demo
-![rakkess demo](doc/demo.png "rakkess demo")
+![rakkess demo](doc/demo-small.png "rakkess demo")
 
 ## Examples
 Show access for all resources
