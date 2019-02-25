@@ -35,16 +35,39 @@ var (
 	v              string
 )
 
+const (
+	rakkessLongDescription = `
+Show an access matrix for all server resources
+
+Rakkess retrieves the full list of server resources, checks access for
+the current user with the given verbs, and prints the result as a matrix.
+This complements the usual "kubectl auth can-i" command, which works for
+a single resource and a single verb.
+
+More on https://github.com/corneliusweig/rakkess/blob/v0.1.0/doc/USAGE.md#usage
+`
+
+	rakkessExamples = `
+  Review access to cluster-scoped resources
+  $ rakkess
+
+  Review access to namespaced resources in 'default'
+  $ rakkess --namespace default
+
+  Review access as a different user
+  $ rakkess --as other-user
+
+  Review access for different verbs
+  $ rakkess --verbs get,watch,proxy
+`
+)
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "rakkess",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:     "rakkess",
+	Short:   "Review access - show an access matrix for all resources",
+	Long:    rakkessLongDescription,
+	Example: rakkessExamples,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithCancel(context.Background())
 		catchCtrC(cancel)
