@@ -42,12 +42,17 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 		return errors.Wrap(err, "get auth client")
 	}
 
-	results, err := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs, opts.ConfigFlags.Namespace)
+	namespace := opts.ConfigFlags.Namespace
+	results, err := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs, namespace)
 	if err != nil {
 		return errors.Wrap(err, "check resource access")
 	}
 
 	util.PrintResults(opts.Streams.Out, opts.Verbs, results)
+
+	if namespace == nil || *namespace == "" {
+		logrus.Warn("No namespace given, this implies cluster scope (try -n if this is not intended)")
+	}
 
 	return nil
 }
