@@ -56,14 +56,14 @@ When using the binaries for installation, also have a look at [doc/USAGE](doc/US
 
 #### Linux
 ```bash
-curl -Lo rakkess https://github.com/corneliusweig/rakkess/releases/download/v0.1.0/rakkess-linux-amd64.gz &&
-  gunzip rakkess-linux-amd64.gz && chmod +x rakkess-linux-amd64 && mv rakkess-linux-amd64 $GOPATH/bin/rakkess
+curl -Lo rakkess.gz https://github.com/corneliusweig/rakkess/releases/download/v0.1.0/rakkess-linux-amd64.gz && \
+  gunzip rakkess.gz && chmod +x rakkess && mv rakkess $GOPATH/bin/
 ```
 
 #### OSX
 ```bash
-curl -Lo rakkess https://github.com/corneliusweig/rakkess/releases/download/v0.1.0/rakkess-darwin-amd64.gz &&
-  gunzip rakkess-darwin-amd64.gz && chmod +x rakkess-darwin-amd64 && mv rakkess-darwin-amd64 $GOPATH/bin/rakkess
+curl -Lo rakkess.gz https://github.com/corneliusweig/rakkess/releases/download/v0.1.0/rakkess-darwin-amd64.gz && \
+  gunzip rakkess.gz && chmod +x rakkess && mv rakkess $GOPATH/bin/
 ```
 
 #### Windows
