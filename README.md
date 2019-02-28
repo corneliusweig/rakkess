@@ -97,3 +97,13 @@ docker run --rm -v $PWD:/go/bin/ --env PLATFORMS=$(go env GOOS) rakkess
 docker rmi rakkess-builder
 ```
 Binaries will be placed in the current directory.
+
+## Users
+
+| What are others saying about rakkess? |
+| ---- |
+| _“Well, that looks handy! `rakkess`, a kubectl plugin to show an access matrix for all available resources.”_ – [@mhausenblas](https://twitter.com/mhausenblas/status/1100673166303739905) |
+| _“that's indeed pretty helpful. `rakkess --as system:serviceaccount:my-ns:my-sa -n my-ns` prints the access matrix of a service account in a namespace”_ – [@fakod](https://twitter.com/fakod/status/1100764745957658626) |
+| _“THE BOMB. Love it.”_ – [@ralph_squillace](https://twitter.com/ralph_squillace/status/1100844255830896640) |
+| _“This made my day. Well, not actually today but I definitively will use it a lot.”_ – [@Soukron](https://twitter.com/Soukron/status/1100690060129775617) |
+
