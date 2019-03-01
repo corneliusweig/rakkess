@@ -62,7 +62,7 @@ func printOptions(o *options.RakkessOptions) util.PrintOptions {
 	if o.DisplayMode == "ascii" {
 		displayMode = util.ASCII
 	}
-	return util.PrintOptions {
+	return util.PrintOptions{
 		DisplayMode: displayMode,
 	}
 }
