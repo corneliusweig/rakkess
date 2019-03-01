@@ -27,6 +27,7 @@ import (
 type RakkessOptions struct {
 	ConfigFlags *genericclioptions.ConfigFlags
 	Verbs       []string
+	DisplayMode string
 	Streams     *genericclioptions.IOStreams
 }
 

@@ -48,11 +48,21 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 		return errors.Wrap(err, "check resource access")
 	}
 
-	util.PrintResults(opts.Streams.Out, opts.Verbs, results)
+	util.PrintResults(opts.Streams.Out, opts.Verbs, printOptions(opts), results)
 
 	if namespace == nil || *namespace == "" {
 		logrus.Warn("No namespace given, this implies cluster scope (try -n if this is not intended)")
 	}
 
 	return nil
+}
+
+func printOptions(o *options.RakkessOptions) util.PrintOptions {
+	displayMode := util.Icons
+	if o.DisplayMode == "ascii" {
+		displayMode = util.ASCII
+	}
+	return util.PrintOptions {
+		DisplayMode: displayMode,
+	}
 }

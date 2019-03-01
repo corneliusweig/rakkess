@@ -37,7 +37,18 @@ const (
 
 var IsTerminal = isTerminal
 
-func PrintResults(out io.Writer, requestedVerbs []string, results []client.Result) {
+type DisplayMode int
+
+const (
+	Icons DisplayMode = iota
+	ASCII DisplayMode = iota
+)
+
+type PrintOptions struct {
+	DisplayMode DisplayMode
+}
+
+func PrintResults(out io.Writer, requestedVerbs []string, options PrintOptions, results []client.Result) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape^StripEscape)
 	defer w.Flush()
 
@@ -50,6 +61,9 @@ func PrintResults(out io.Writer, requestedVerbs []string, results []client.Resul
 	codeConverter := humanreadableAccessCode
 	if IsTerminal(out) {
 		codeConverter = colorHumanreadableAccessCode
+	}
+	if options.DisplayMode == ASCII {
+		codeConverter = asciiAccessCode
 	}
 
 	for _, r := range results {
@@ -99,4 +113,19 @@ func codeToColor(code int) color {
 		return purple
 	}
 	return none
+}
+
+func asciiAccessCode(code int) string {
+	switch code {
+	case client.AccessAllowed:
+		return "yes"
+	case client.AccessDenied:
+		return "no"
+	case client.AccessNotApplicable:
+		return ""
+	case client.AccessRequestErr:
+		return "ERR"
+	default:
+		panic("unknown access code")
+	}
 }
