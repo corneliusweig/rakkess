@@ -34,7 +34,7 @@ CHECKSUMS += $(BUNDLE).sha256
 
 VERSION_PACKAGE := $(REPOPATH)/pkg/rakkess/version
 
-GO_LDFLAGS :="
+GO_LDFLAGS :="-s -w
 GO_LDFLAGS += -X $(VERSION_PACKAGE).version=$(VERSION)
 GO_LDFLAGS += -X $(VERSION_PACKAGE).buildDate=$(shell date +'%Y-%m-%dT%H:%M:%SZ')
 GO_LDFLAGS += -X $(VERSION_PACKAGE).gitCommit=$(COMMIT)
@@ -69,6 +69,7 @@ all: $(TARGETS)
 .PHONY: dev
 dev: GO_FLAGS := -race
 dev: CGO_ENABLED := 1
+dev: GO_LDFLAGS := $(subst -s -w,,$(GO_LDFLAGS))
 dev: $(BUILDDIR)/rakkess-linux-$(GOARCH)
 	@mv $< $(PROJECT)
 
