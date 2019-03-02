@@ -19,11 +19,10 @@ package util
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
+	"sync"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 type color int
@@ -35,7 +34,10 @@ const (
 	none   = color(0)
 )
 
-var IsTerminal = isTerminal
+var (
+	IsTerminal = isTerminal
+	terminit   sync.Once
+)
 
 type OutputFormat int
 
@@ -44,9 +46,12 @@ const (
 	ASCIITable OutputFormat = iota
 )
 
+// TODO printing logic should be moved to its own package
 func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.Result) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape^StripEscape)
 	defer w.Flush()
+
+	terminit.Do(func() { initTerminal(out) })
 
 	fmt.Fprint(w, "NAME")
 	for _, v := range requestedVerbs {
@@ -84,13 +89,6 @@ func humanreadableAccessCode(code int) string {
 	default:
 		panic("unknown access code")
 	}
-}
-
-func isTerminal(w io.Writer) bool {
-	if f, ok := w.(*os.File); ok {
-		return terminal.IsTerminal(int(f.Fd()))
-	}
-	return false
 }
 
 func colorHumanreadableAccessCode(code int) string {
