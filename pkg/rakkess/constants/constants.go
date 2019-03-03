@@ -32,4 +32,8 @@ var (
 		"delete",
 		"proxy",
 	}
+	ValidOutputFormats = []string{
+		"icon-table",
+		"ascii-table",
+	}
 )

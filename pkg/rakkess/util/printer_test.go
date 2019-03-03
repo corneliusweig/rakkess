@@ -55,6 +55,7 @@ func TestPrintResults(t *testing.T) {
 		given         []client.Result
 		expected      string
 		expectedColor string
+		expectedASCII string
 	}{
 		{
 			"single result, all allowed",
@@ -64,6 +65,7 @@ func TestPrintResults(t *testing.T) {
 			},
 			HEADER + "resource1  ✔    ✔\n",
 			HEADER + "resource1  \033[32m✔\033[0m    \033[32m✔\033[0m\n",
+			HEADER + "resource1  yes  yes\n",
 		},
 		{
 			"single result, all forbidden",
@@ -73,6 +75,7 @@ func TestPrintResults(t *testing.T) {
 			},
 			HEADER + "resource1  ✖    ✖\n",
 			HEADER + "resource1  \033[31m✖\033[0m    \033[31m✖\033[0m\n",
+			HEADER + "resource1  no   no\n",
 		},
 		{
 			"single result, all not applicable",
@@ -82,6 +85,7 @@ func TestPrintResults(t *testing.T) {
 			},
 			HEADER + "resource1       \n",
 			HEADER + "resource1  \033[0m\033[0m     \033[0m\033[0m\n",
+			HEADER + "resource1  n/a  n/a\n",
 		},
 		{
 			"single result, all ERR",
@@ -91,6 +95,7 @@ func TestPrintResults(t *testing.T) {
 			},
 			HEADER + "resource1  ERR  ERR\n",
 			HEADER + "resource1  \033[35mERR\033[0m  \033[35mERR\033[0m\n",
+			HEADER + "resource1  ERR  ERR\n",
 		},
 		{
 			"single result, mixed",
@@ -100,6 +105,7 @@ func TestPrintResults(t *testing.T) {
 			},
 			HEADER + "resource1  ✖    ✔\n",
 			"",
+			HEADER + "resource1  no   yes\n",
 		},
 		{
 			"many results",
@@ -111,6 +117,7 @@ func TestPrintResults(t *testing.T) {
 			},
 			"NAME       GET\nresource1  ✖\nresource2  ✔\nresource3  ✖\n",
 			"",
+			"NAME       GET\nresource1  no\nresource2  yes\nresource3  no\n",
 		},
 	}
 
@@ -118,9 +125,15 @@ func TestPrintResults(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, test.given)
+			PrintResults(buf, test.verbs, IconTable, test.given)
 
 			assert.Equal(t, test.expected, buf.String())
+
+			buf = &bytes.Buffer{}
+
+			PrintResults(buf, test.verbs, ASCIITable, test.given)
+
+			assert.Equal(t, test.expectedASCII, buf.String())
 		})
 	}
 
@@ -136,9 +149,15 @@ func TestPrintResults(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, test.given)
+			PrintResults(buf, test.verbs, IconTable, test.given)
 
 			assert.Equal(t, test.expectedColor, buf.String())
+
+			buf = &bytes.Buffer{}
+
+			PrintResults(buf, test.verbs, ASCIITable, test.given)
+
+			assert.Equal(t, test.expectedASCII, buf.String())
 		})
 	}
 }

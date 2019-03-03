@@ -37,7 +37,14 @@ const (
 
 var IsTerminal = isTerminal
 
-func PrintResults(out io.Writer, requestedVerbs []string, results []client.Result) {
+type OutputFormat int
+
+const (
+	IconTable  OutputFormat = iota
+	ASCIITable OutputFormat = iota
+)
+
+func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.Result) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape^StripEscape)
 	defer w.Flush()
 
@@ -50,6 +57,9 @@ func PrintResults(out io.Writer, requestedVerbs []string, results []client.Resul
 	codeConverter := humanreadableAccessCode
 	if IsTerminal(out) {
 		codeConverter = colorHumanreadableAccessCode
+	}
+	if outputFormat == ASCIITable {
+		codeConverter = asciiAccessCode
 	}
 
 	for _, r := range results {
@@ -99,4 +109,19 @@ func codeToColor(code int) color {
 		return purple
 	}
 	return none
+}
+
+func asciiAccessCode(code int) string {
+	switch code {
+	case client.AccessAllowed:
+		return "yes"
+	case client.AccessDenied:
+		return "no"
+	case client.AccessNotApplicable:
+		return "n/a"
+	case client.AccessRequestErr:
+		return "ERR"
+	default:
+		panic("unknown access code")
+	}
 }
