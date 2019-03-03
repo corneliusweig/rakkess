@@ -30,6 +30,9 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 	if err := util.ValidateVerbs(opts.Verbs); err != nil {
 		return err
 	}
+	if err := util.ValidateOutputFormat(opts.Output); err != nil {
+		return err
+	}
 
 	grs, err := client.FetchAvailableGroupResources(opts)
 	if err != nil {
