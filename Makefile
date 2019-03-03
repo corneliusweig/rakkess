@@ -54,6 +54,7 @@ help:
 	@echo '  - coverage: run unit tests with coverage'
 	@echo '  - deploy:   build artifacts for a new deployment'
 	@echo '  - dev:      build the binary for the current platform'
+	@echo '  - dist:     create a tar archive of the source code
 	@echo '  - help:     print this help'
 	@echo '  - install:  install the `rakkess` binary in your gopath'
 	@echo '  - lint:     run golangci-lint
@@ -70,7 +71,7 @@ all: $(TARGETS)
 dev: GO_FLAGS := -race
 dev: CGO_ENABLED := 1
 dev: GO_LDFLAGS := $(subst -s -w,,$(GO_LDFLAGS))
-dev: $(BUILDDIR)/rakkess-linux-$(GOARCH)
+dev: $(BUILDDIR)/rakkess-$(shell go env GOOS)-$(GOARCH)
 	@mv $< $(PROJECT)
 
 $(BUILDDIR)/$(PROJECT)-%-$(GOARCH): $(GO_FILES) $(BUILDDIR)
@@ -83,14 +84,17 @@ install: $(BUILDDIR)/$(PROJECT)-$(GOOS)-$(GOARCH)
 lint:
 	hack/run_lint.sh
 
+.PRECIOUS: %.zip
 %.zip: %
 	zip $@ $<
 
+.PRECIOUS: %.gz
 %.gz: %
-	gzip --best -k $<
+	zopfli -c "$<" > "$@"
 
-$(BUNDLE): $(TARGETS)
-	tar czf $(BUNDLE) -C $(BUILDDIR) $(patsubst $(BUILDDIR)/%,%,$(TARGETS))
+.INTERMEDIATE: $(BUNDLE:.gz=)
+$(BUNDLE:.gz=):
+	tar cf "$@" -C $(BUILDDIR) $(patsubst $(BUILDDIR)/%,%,$(TARGETS))
 
 $(BUILDDIR):
 	mkdir -p "$@"
@@ -98,9 +102,16 @@ $(BUILDDIR):
 %.sha256: %
 	shasum -a 256 $< > $@
 
+.INTERMEDIATE: $(DISTFILE:.gz=)
+$(DISTFILE:.gz=): $(BUILDDIR)
+	git archive --prefix="rakkess-$(VERSION)/" --format=tar HEAD > "$@"
+
 .PHONY: deploy
-deploy: $(CHECKSUMS) $(ASSETS)
-	git archive --prefix="rakkess-$(VERSION)/" --format=tar.gz HEAD > $(DISTFILE)
+deploy: $(CHECKSUMS)
+	$(RM) $(TARGETS)
+
+.PHONY: dist
+dist: $(DISTFILE)
 
 .PHONY: clean
 clean:
