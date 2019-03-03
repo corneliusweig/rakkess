@@ -37,18 +37,14 @@ const (
 
 var IsTerminal = isTerminal
 
-type DisplayMode int
+type OutputFormat int
 
 const (
-	Icons DisplayMode = iota
-	ASCII DisplayMode = iota
+	IconTable  OutputFormat = iota
+	ASCIITable OutputFormat = iota
 )
 
-type PrintOptions struct {
-	DisplayMode DisplayMode
-}
-
-func PrintResults(out io.Writer, requestedVerbs []string, options PrintOptions, results []client.Result) {
+func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.Result) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape^StripEscape)
 	defer w.Flush()
 
@@ -62,7 +58,7 @@ func PrintResults(out io.Writer, requestedVerbs []string, options PrintOptions, 
 	if IsTerminal(out) {
 		codeConverter = colorHumanreadableAccessCode
 	}
-	if options.DisplayMode == ASCII {
+	if outputFormat == ASCIITable {
 		codeConverter = asciiAccessCode
 	}
 

@@ -32,8 +32,8 @@ var (
 		"delete",
 		"proxy",
 	}
-	ValidDisplayModes = []string{
-		"icons",
-		"ascii",
+	ValidOutputFormats = []string{
+		"icon-table",
+		"ascii-table",
 	}
 )
