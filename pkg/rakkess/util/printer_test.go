@@ -85,7 +85,7 @@ func TestPrintResults(t *testing.T) {
 			},
 			HEADER + "resource1       \n",
 			HEADER + "resource1  \033[0m\033[0m     \033[0m\033[0m\n",
-			HEADER + "resource1       \n",
+			HEADER + "resource1  n/a  n/a\n",
 		},
 		{
 			"single result, all ERR",

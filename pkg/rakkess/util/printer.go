@@ -118,7 +118,7 @@ func asciiAccessCode(code int) string {
 	case client.AccessDenied:
 		return "no"
 	case client.AccessNotApplicable:
-		return ""
+		return "n/a"
 	case client.AccessRequestErr:
 		return "ERR"
 	default:
