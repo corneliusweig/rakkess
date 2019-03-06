@@ -43,7 +43,7 @@ func (b *buffer) Write(buf []byte) (written int, err error) {
 
 func (b *buffer) String() string { return string(b.a) }
 
-func write(t *testing.T, testname string, w *Writer, src string) {
+func write(t *testing.T, testname string, w io.Writer, src string) {
 	written, err := io.WriteString(w, src)
 	if err != nil {
 		t.Errorf("--- test: %s\n--- src:\n%q\n--- write error: %v\n", testname, src, err)
@@ -53,7 +53,7 @@ func write(t *testing.T, testname string, w *Writer, src string) {
 	}
 }
 
-func verify(t *testing.T, testname string, w *Writer, b *buffer, src, expected string) {
+func verify(t *testing.T, testname string, w *Writer, b fmt.Stringer, src, expected string) {
 	err := w.Flush()
 	if err != nil {
 		t.Errorf("--- test: %s\n--- src:\n%q\n--- flush error: %v\n", testname, src, err)

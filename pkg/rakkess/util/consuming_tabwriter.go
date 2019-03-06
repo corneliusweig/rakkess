@@ -256,20 +256,6 @@ func (b *Writer) Init(output io.Writer, minwidth, tabwidth, padding int, padchar
 	return b
 }
 
-// debugging support (keep code around)
-func (b *Writer) dump() {
-	pos := 0
-	for i, line := range b.lines {
-		print("(", i, ") ")
-		for _, c := range line {
-			print("[", string(b.buf[pos:pos+c.size]), "]")
-			pos += c.size
-		}
-		print("\n")
-	}
-	print("\n")
-}
-
 // local error wrapper so we can distinguish errors we want to return
 // as errors from genuine panics (which we don't want to return as errors)
 type osError struct {
@@ -600,18 +586,16 @@ func (b *Writer) Write(buf []byte) (n int, err error) {
 				}
 			}
 
-		} else {
 			// inside escape
-			if ch == b.endChar {
-				// end of tag/entity
-				j := i + 1
-				if ch == Escape && b.flags&StripEscape != 0 {
-					j = i // strip Escape
-				}
-				b.append(buf[n:j])
-				n = i + 1 // ch consumed
-				b.endEscape()
+		} else if ch == b.endChar {
+			// end of tag/entity
+			j := i + 1
+			if ch == Escape && b.flags&StripEscape != 0 {
+				j = i // strip Escape
 			}
+			b.append(buf[n:j])
+			n = i + 1 // ch consumed
+			b.endEscape()
 		}
 	}
 
