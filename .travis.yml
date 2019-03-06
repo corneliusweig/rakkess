@@ -26,12 +26,12 @@ deploy:
   provider: releases
   api_key: $GITHUB_OAUTH_TOKEN
   file:
-    - out/rakkess-linux-amd64
-    - out/rakkess-linux-amd64.sha256
-    - out/rakkess-windows-amd64
-    - out/rakkess-windows-amd64.sha256
-    - out/rakkess-darwin-amd64
-    - out/rakkess-darwin-amd64.sha256
+    - out/rakkess-linux-amd64.gz
+    - out/rakkess-linux-amd64.gz.sha256
+    - out/rakkess-windows-amd64.gz
+    - out/rakkess-windows-amd64.gz.sha256
+    - out/rakkess-darwin-amd64.gz
+    - out/rakkess-darwin-amd64.gz.sha256
     - out/bundle.tar.gz
     - out/bundle.tar.gz.sha256
   skip_cleanup: true

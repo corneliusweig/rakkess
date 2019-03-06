@@ -40,6 +40,12 @@ GO_LDFLAGS += -X $(VERSION_PACKAGE).buildDate=$(shell date +'%Y-%m-%dT%H:%M:%SZ'
 GO_LDFLAGS += -X $(VERSION_PACKAGE).gitCommit=$(COMMIT)
 GO_LDFLAGS +="
 
+ifdef ZOPFLI
+  COMPRESS:=zopfli -c
+else
+  COMPRESS:=gzip --best -k -c
+endif
+
 GO_FILES  := $(shell find . -type f -name '*.go')
 
 .PHONY: test
@@ -90,10 +96,10 @@ lint:
 
 .PRECIOUS: %.gz
 %.gz: %
-	zopfli -c "$<" > "$@"
+	$(COMPRESS) "$<" > "$@"
 
 .INTERMEDIATE: $(BUNDLE:.gz=)
-$(BUNDLE:.gz=):
+$(BUNDLE:.gz=): $(TARGETS)
 	tar cf "$@" -C $(BUILDDIR) $(patsubst $(BUILDDIR)/%,%,$(TARGETS))
 
 $(BUILDDIR):
