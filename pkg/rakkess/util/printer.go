@@ -48,7 +48,7 @@ const (
 
 // TODO printing logic should be moved to its own package
 func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.Result) {
-	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape^StripEscape)
+	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
 	defer w.Flush()
 
 	terminit.Do(func() { initTerminal(out) })

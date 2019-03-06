@@ -103,7 +103,7 @@ $(BUILDDIR):
 	shasum -a 256 $< > $@
 
 .INTERMEDIATE: $(DISTFILE:.gz=)
-$(DISTFILE:.gz=): $(BUILDDIR)
+$(DISTFILE:.gz=): $(TARGETS)
 	git archive --prefix="rakkess-$(VERSION)/" --format=tar HEAD > "$@"
 
 .PHONY: deploy
