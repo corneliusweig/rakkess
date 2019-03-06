@@ -615,6 +615,34 @@ var tests = []struct {
 			"a\t|b\t|c\t|d\n" +
 			"a\t|b\t|c\t|d\t|e\n",
 	},
+
+	{
+		"smashed escape test",
+		8, 4, 0, '.', StripEscape | CollapseEscape,
+		"\xffsmashed_\xffcell1\tcell2",
+		"smashed_cell1...cell2",
+	},
+
+	{
+		"smashed escape test with padding",
+		8, 4, 2, '.', StripEscape | CollapseEscape,
+		"\xffsmashed_\xffcell1\tcell2\nlong cell3\tcell4",
+		"smashed_cell1.......cell2\nlong cell3..cell4",
+	},
+
+	{
+		"smashed escape test, no-strip",
+		8, 4, 0, '.', CollapseEscape,
+		"\xffsmashed_\xffcell1\tcell2",
+		"\xffsmashed_\xffcell1...cell2",
+	},
+
+	{
+		"smashed escape test with padding, no-strip",
+		8, 4, 2, '.', CollapseEscape,
+		"\xffsmashed_\xffcell1\tcell2\nlong cell3\tcell4",
+		"\xffsmashed_\xffcell1.......cell2\nlong cell3..cell4",
+	},
 }
 
 func Test(t *testing.T) {
