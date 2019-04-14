@@ -18,6 +18,7 @@ package rakkess
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
@@ -54,7 +55,7 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 	util.PrintResults(opts.Streams.Out, opts.Verbs, outputFormat(opts), results)
 
 	if namespace == nil || *namespace == "" {
-		logrus.Warn("No namespace given, this implies cluster scope (try -n if this is not intended)")
+		fmt.Fprintf(opts.Streams.Out, "No namespace given, this implies cluster scope (try -n if this is not intended)\n")
 	}
 
 	return nil
