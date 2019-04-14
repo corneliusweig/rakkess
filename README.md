@@ -44,7 +44,7 @@ There are several ways to install `rakkess`. The recommended installation method
 
 ### Via krew
 Krew is a `kubectl` plugin manager. If you have not yet installed `krew`, get it at
-[https://github.com/GoogleContainerTools/krew](https://github.com/GoogleContainerTools/krew).
+[https://github.com/kubernetes-sigs/krew](https://github.com/kubernetes-sigs/krew).
 Then installation is as simple as
 ```bash
 kubectl krew install access-matrix
