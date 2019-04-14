@@ -33,7 +33,7 @@ type RakkessOptions struct {
 
 func NewRakkessOptions() *RakkessOptions {
 	return &RakkessOptions{
-		ConfigFlags: genericclioptions.NewConfigFlags(),
+		ConfigFlags: genericclioptions.NewConfigFlags(true),
 		Streams: &genericclioptions.IOStreams{
 			In:     os.Stdin,
 			Out:    os.Stdout,
