@@ -56,4 +56,4 @@ This is a checklist for new releases:
 0. Push the tag to GitHub `git push --tags`
 0. Run `make deploy`
 0. Create new release on GitHub Releases and upload artifacts
-0. Update [krew-index](https://github.com/GoogleContainerTools/krew-index)
+0. Update [krew-index](https://github.com/kubernetes-sigs/krew-index)
