@@ -24,13 +24,14 @@ const (
 
 var (
 	ValidVerbs = []string{
+		"create",
+		"delete",
+		"deletecollection",
 		"get",
 		"list",
-		"watch",
-		"create",
+		"patch",
 		"update",
-		"delete",
-		"proxy",
+		"watch",
 	}
 	ValidOutputFormats = []string{
 		"icon-table",
