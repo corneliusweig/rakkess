@@ -68,6 +68,7 @@ var rootCmd = &cobra.Command{
 	Short:   "Review access - show an access matrix for all resources",
 	Long:    rakkessLongDescription,
 	Example: rakkessExamples,
+	Args:    cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithCancel(context.Background())
 		catchCtrC(cancel)
@@ -90,10 +91,7 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
 
-	rootCmd.Flags().StringSliceVar(&rakkessOptions.Verbs, "verbs", []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of %s", constants.ValidVerbs))
-	rootCmd.Flags().StringVarP(&rakkessOptions.Output, "output", "o", "icon-table", fmt.Sprintf("output format out of %s", constants.ValidOutputFormats))
-
-	rakkessOptions.ConfigFlags.AddFlags(rootCmd.Flags())
+	AddRakkessFlags(rootCmd)
 
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := SetUpLogs(rakkessOptions.Streams.ErrOut, v); err != nil {
@@ -101,6 +99,13 @@ func init() {
 		}
 		return nil
 	}
+}
+
+func AddRakkessFlags(cmd *cobra.Command) {
+	cmd.Flags().StringSliceVar(&rakkessOptions.Verbs, "verbs", []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of %s", constants.ValidVerbs))
+	cmd.Flags().StringVarP(&rakkessOptions.Output, "output", "o", "icon-table", fmt.Sprintf("output format out of %s", constants.ValidOutputFormats))
+
+	rakkessOptions.ConfigFlags.AddFlags(cmd.Flags())
 }
 
 func SetUpLogs(out io.Writer, level string) error {
