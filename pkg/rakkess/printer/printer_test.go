@@ -52,7 +52,7 @@ func TestPrintResults(t *testing.T) {
 	tests := []struct {
 		name          string
 		verbs         []string
-		given         []client.Result
+		given         []client.ResourceAccess
 		expected      string
 		expectedColor string
 		expectedASCII string
@@ -60,7 +60,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all allowed",
 			[]string{"get", "list"},
-			[]client.Result{
+			[]client.ResourceAccess{
 				{Name: "resource1", Access: buildAccess().allowed("get", "list").get()},
 			},
 			HEADER + "resource1  ✔    ✔\n",
@@ -70,7 +70,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all forbidden",
 			[]string{"get", "list"},
-			[]client.Result{
+			[]client.ResourceAccess{
 				{Name: "resource1", Access: buildAccess().denied("get", "list").get()},
 			},
 			HEADER + "resource1  ✖    ✖\n",
@@ -80,7 +80,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all not applicable",
 			[]string{"get", "list"},
-			[]client.Result{
+			[]client.ResourceAccess{
 				{Name: "resource1", Access: buildAccess().withResult(client.AccessNotApplicable, "get", "list").get()},
 			},
 			HEADER + "resource1       \n",
@@ -90,7 +90,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all ERR",
 			[]string{"get", "list"},
-			[]client.Result{
+			[]client.ResourceAccess{
 				{Name: "resource1", Access: buildAccess().withResult(client.AccessRequestErr, "get", "list").get()},
 			},
 			HEADER + "resource1  ERR  ERR\n",
@@ -100,7 +100,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, mixed",
 			[]string{"get", "list"},
-			[]client.Result{
+			[]client.ResourceAccess{
 				{Name: "resource1", Access: buildAccess().allowed("list").denied("get").get()},
 			},
 			HEADER + "resource1  ✖    ✔\n",
@@ -110,7 +110,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"many results",
 			[]string{"get"},
-			[]client.Result{
+			[]client.ResourceAccess{
 				{Name: "resource1", Access: buildAccess().denied("get").get()},
 				{Name: "resource2", Access: buildAccess().allowed("get").get()},
 				{Name: "resource3", Access: buildAccess().denied("get").get()},

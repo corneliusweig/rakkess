@@ -29,23 +29,23 @@ import (
 )
 
 const (
-	AccessAllowed       = iota
-	AccessDenied        = iota
-	AccessNotApplicable = iota
-	AccessRequestErr    = iota
+	AccessAllowed = iota
+	AccessDenied
+	AccessNotApplicable
+	AccessRequestErr
 )
 
-type Result struct {
+type ResourceAccess struct {
 	Name   string
 	Access map[string]int
 	Err    []error
 }
 
-type sortableResult []Result
+type sortableResourceAccess []ResourceAccess
 
-func (s sortableResult) Len() int      { return len(s) }
-func (s sortableResult) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s sortableResult) Less(i, j int) bool {
+func (s sortableResourceAccess) Len() int      { return len(s) }
+func (s sortableResourceAccess) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s sortableResourceAccess) Less(i, j int) bool {
 	ret := strings.Compare(s[i].Name, s[j].Name)
 	if ret > 0 {
 		return false
@@ -55,10 +55,10 @@ func (s sortableResult) Less(i, j int) bool {
 	return true
 }
 
-func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (results []Result, err error) {
+func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (results []ResourceAccess, err error) {
 	group := sync.WaitGroup{}
 	semaphore := make(chan struct{}, 20)
-	resultsChan := make(chan Result)
+	resultsChan := make(chan ResourceAccess)
 
 	var ns string
 	if namespace == nil {
@@ -71,7 +71,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 		// copy captured variables
 		namespace := ns
 		gr := gr
-		go func(ctx context.Context, allowed chan<- Result) {
+		go func(ctx context.Context, allowed chan<- ResourceAccess) {
 			defer group.Done()
 
 			// exit early, if context is done
@@ -128,7 +128,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 
 			}
 			<-semaphore
-			allowed <- Result{
+			allowed <- ResourceAccess{
 				Name:   gr.fullName(),
 				Access: access,
 				Err:    errs,
@@ -145,7 +145,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 		results = append(results, gr)
 	}
 
-	sort.Stable(sortableResult(results))
+	sort.Stable(sortableResourceAccess(results))
 
 	return
 }

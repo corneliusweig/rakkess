@@ -46,7 +46,7 @@ const (
 	ASCIITable OutputFormat = iota
 )
 
-func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.Result) {
+func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.ResourceAccess) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
 	defer w.Flush()
 
