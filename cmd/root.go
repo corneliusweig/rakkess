@@ -71,7 +71,7 @@ var rootCmd = &cobra.Command{
 	Args:    cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithCancel(context.Background())
-		catchCtrC(cancel)
+		catchCtrlC(cancel)
 
 		if err := rakkess.Rakkess(ctx, rakkessOptions); err != nil {
 			logrus.Fatal(err)

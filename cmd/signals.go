@@ -23,7 +23,7 @@ import (
 	"syscall"
 )
 
-func catchCtrC(cancel context.CancelFunc) {
+func catchCtrlC(cancel context.CancelFunc) {
 	catchSigs(cancel, syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM)
 }
 
