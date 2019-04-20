@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package util
+package printer
 
 import (
 	"fmt"
@@ -46,7 +46,6 @@ const (
 	ASCIITable OutputFormat = iota
 )
 
-// TODO printing logic should be moved to its own package
 func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.Result) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
 	defer w.Flush()
