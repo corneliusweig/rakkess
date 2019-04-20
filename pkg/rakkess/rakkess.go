@@ -23,16 +23,13 @@ import (
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/printer"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/util"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/validation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
-	if err := util.ValidateVerbs(opts.Verbs); err != nil {
-		return err
-	}
-	if err := util.ValidateOutputFormat(opts.Output); err != nil {
+	if err := validation.Options(opts); err != nil {
 		return err
 	}
 
