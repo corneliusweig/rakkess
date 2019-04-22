@@ -125,13 +125,13 @@ func TestPrintResults(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, IconTable, test.given)
+			PrintResults(buf, test.verbs, "icon-table", test.given)
 
 			assert.Equal(t, test.expected, buf.String())
 
 			buf = &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, ASCIITable, test.given)
+			PrintResults(buf, test.verbs, "ascii-table", test.given)
 
 			assert.Equal(t, test.expectedASCII, buf.String())
 		})
@@ -149,13 +149,13 @@ func TestPrintResults(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, IconTable, test.given)
+			PrintResults(buf, test.verbs, "icon-table", test.given)
 
 			assert.Equal(t, test.expectedColor, buf.String())
 
 			buf = &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, ASCIITable, test.given)
+			PrintResults(buf, test.verbs, "ascii-table", test.given)
 
 			assert.Equal(t, test.expectedASCII, buf.String())
 		})

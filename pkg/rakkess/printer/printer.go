@@ -39,14 +39,7 @@ var (
 	terminit   sync.Once
 )
 
-type OutputFormat int
-
-const (
-	IconTable  OutputFormat = iota
-	ASCIITable OutputFormat = iota
-)
-
-func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.ResourceAccess) {
+func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results []client.ResourceAccess) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
 	defer w.Flush()
 
@@ -62,7 +55,7 @@ func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFor
 	if IsTerminal(out) {
 		codeConverter = colorHumanreadableAccessCode
 	}
-	if outputFormat == ASCIITable {
+	if outputFormat == "ascii-table" {
 		codeConverter = asciiAccessCode
 	}
 

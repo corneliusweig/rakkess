@@ -37,7 +37,7 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 	if err != nil {
 		return errors.Wrap(err, "fetch available group resources")
 	}
-	logrus.Info(grs)
+	logrus.Debug(grs)
 
 	authClient, err := opts.GetAuthClient()
 	if err != nil {
@@ -50,18 +50,11 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 		return errors.Wrap(err, "check resource access")
 	}
 
-	printer.PrintResults(opts.Streams.Out, opts.Verbs, outputFormat(opts), results)
+	printer.PrintResults(opts.Streams.Out, opts.Verbs, opts.OutputFormat, results)
 
 	if namespace == nil || *namespace == "" {
 		fmt.Fprintf(opts.Streams.Out, "No namespace given, this implies cluster scope (try -n if this is not intended)\n")
 	}
 
 	return nil
-}
-
-func outputFormat(o *options.RakkessOptions) printer.OutputFormat {
-	if o.Output == "ascii-table" {
-		return printer.ASCIITable
-	}
-	return printer.IconTable
 }

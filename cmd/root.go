@@ -103,7 +103,7 @@ func init() {
 
 func AddRakkessFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSliceVar(&rakkessOptions.Verbs, "verbs", []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of %s", constants.ValidVerbs))
-	cmd.Flags().StringVarP(&rakkessOptions.Output, "output", "o", "icon-table", fmt.Sprintf("output format out of %s", constants.ValidOutputFormats))
+	cmd.Flags().StringVarP(&rakkessOptions.OutputFormat, "output", "o", "icon-table", fmt.Sprintf("output format out of %s", constants.ValidOutputFormats))
 
 	rakkessOptions.ConfigFlags.AddFlags(cmd.Flags())
 }
