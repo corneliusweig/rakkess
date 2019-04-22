@@ -17,8 +17,8 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +30,8 @@ var resourceCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Long:    `todo`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("resource called")
+		sa, _ := client.GetSubjectAccess(rakkessOptions, args[0])
+		logrus.Infof("%s", sa.Get())
 	},
 }
 
