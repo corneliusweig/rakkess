@@ -113,6 +113,9 @@ func (ra *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVe
 	// table body
 	for _, subject := range subjects {
 		verbs := ra.subjectAccess[subject]
+		if !verbs.HasAny(requestedVerbs...) {
+			continue
+		}
 		fmt.Fprintf(w, "%s\t%s", subject.Name, subject.Kind)
 		for _, v := range requestedVerbs {
 			var code int

@@ -185,6 +185,16 @@ func TestSubjectAccess_Print(t *testing.T) {
 			verbs:    []string{"list", "get"},
 			expected: "NAME\tKIND\tLIST\tGET\na-default\tSA\tyes\tno\nb-default\tSA\tyes\tyes\nc-default\tSA\tno\tyes\n",
 		},
+		{
+			name: "ignore row without matches",
+			subjectAccess: map[SubjectRef]sets.String{
+				SubjectRef{Name: "c-default", Kind: "SA"}: sets.NewString("get", "delete"),
+				SubjectRef{Name: "b-default", Kind: "SA"}: sets.NewString("delete", "update"),
+				SubjectRef{Name: "a-default", Kind: "SA"}: sets.NewString("list", "delete"),
+			},
+			verbs:    []string{"list", "get"},
+			expected: "NAME\tKIND\tLIST\tGET\na-default\tSA\tyes\tno\nc-default\tSA\tno\tyes\n",
+		},
 	}
 
 	for _, test := range tests {
