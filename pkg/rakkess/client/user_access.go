@@ -18,10 +18,9 @@ package client
 
 import (
 	"context"
-	"sort"
-	"strings"
 	"sync"
 
+	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/authorization/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -35,30 +34,12 @@ const (
 	AccessRequestErr
 )
 
-type ResourceAccess struct {
-	Name   string
-	Access map[string]int
-	Err    []error
-}
-
-type sortableResourceAccess []ResourceAccess
-
-func (s sortableResourceAccess) Len() int      { return len(s) }
-func (s sortableResourceAccess) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s sortableResourceAccess) Less(i, j int) bool {
-	ret := strings.Compare(s[i].Name, s[j].Name)
-	if ret > 0 {
-		return false
-	} else if ret == 0 {
-		return i < j
-	}
-	return true
-}
-
-func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (results []ResourceAccess, err error) {
+// todo(corneliusweig) error is always nil
+func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (result.ResourceAccess, error) {
+	var results []result.ResourceAccessItem
 	group := sync.WaitGroup{}
 	semaphore := make(chan struct{}, 20)
-	resultsChan := make(chan ResourceAccess)
+	resultsChan := make(chan result.ResourceAccessItem)
 
 	var ns string
 	if namespace == nil {
@@ -71,7 +52,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 		// copy captured variables
 		namespace := ns
 		gr := gr
-		go func(ctx context.Context, allowed chan<- ResourceAccess) {
+		go func(ctx context.Context, allowed chan<- result.ResourceAccessItem) {
 			defer group.Done()
 
 			// exit early, if context is done
@@ -128,10 +109,11 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 
 			}
 			<-semaphore
-			allowed <- ResourceAccess{
+			allowed <- result.ResourceAccessItem{
 				Name:   gr.fullName(),
 				Access: access,
-				Err:    errs,
+				// todo(corneliusweig) Err is a write-only field
+				Err: errs,
 			}
 		}(ctx, resultsChan)
 	}
@@ -145,9 +127,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 		results = append(results, gr)
 	}
 
-	sort.Stable(sortableResourceAccess(results))
-
-	return
+	return result.NewResourceAccess(results), nil
 }
 
 func resultFor(status *v1.SubjectAccessReviewStatus) int {

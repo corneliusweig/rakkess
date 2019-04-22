@@ -19,10 +19,10 @@ package printer
 import (
 	"fmt"
 	"io"
-	"strings"
 	"sync"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
 )
 
 type color int
@@ -39,17 +39,11 @@ var (
 	terminit   sync.Once
 )
 
-func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results []client.ResourceAccess) {
+func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results result.ResourceAccess) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
 	defer w.Flush()
 
 	terminit.Do(func() { initTerminal(out) })
-
-	fmt.Fprint(w, "NAME")
-	for _, v := range requestedVerbs {
-		fmt.Fprintf(w, "\t%s", strings.ToUpper(v))
-	}
-	fmt.Fprint(w, "\n")
 
 	codeConverter := humanreadableAccessCode
 	if IsTerminal(out) {
@@ -59,13 +53,7 @@ func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, r
 		codeConverter = asciiAccessCode
 	}
 
-	for _, r := range results {
-		fmt.Fprintf(w, "%s", r.Name)
-		for _, v := range requestedVerbs {
-			fmt.Fprintf(w, "\t%s", codeConverter(r.Access[v]))
-		}
-		fmt.Fprint(w, "\n")
-	}
+	results.Print(w, codeConverter, requestedVerbs)
 }
 
 func humanreadableAccessCode(code int) string {
