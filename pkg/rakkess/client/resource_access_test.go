@@ -17,9 +17,10 @@ limitations under the License.
 package client
 
 import (
-	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	"testing"
 
+	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/rbac/v1"
@@ -41,7 +42,7 @@ func TestGetSubjectAccess(t *testing.T) {
 		clusterRoleBindings []v1.ClusterRoleBinding
 		roles               []v1.Role
 		roleBindings        []v1.RoleBinding
-		expected            map[SubjectRef]sets.String
+		expected            map[result.SubjectRef]sets.String
 	}{
 		{
 			name:                "cluster-role and role matches",
@@ -51,7 +52,7 @@ func TestGetSubjectAccess(t *testing.T) {
 			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
 			roles:               roles("role-1", "some-ns", "deployments", "list"),
 			roleBindings:        roleBindings("role-1", "Role", "test-user"),
-			expected: map[SubjectRef]sets.String{
+			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: "User"}: sets.NewString("create", "list"),
 			},
 		},
@@ -63,7 +64,7 @@ func TestGetSubjectAccess(t *testing.T) {
 			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "user1", "user2"),
 			roles:               roles("role-1", "some-ns", "deployments", "list"),
 			roleBindings:        roleBindings("role-1", "Role", "user2", "user3"),
-			expected: map[SubjectRef]sets.String{
+			expected: map[result.SubjectRef]sets.String{
 				{Name: "user1", Kind: "User"}: sets.NewString("create"),
 				{Name: "user2", Kind: "User"}: sets.NewString("create", "list"),
 				{Name: "user3", Kind: "User"}: sets.NewString("list"),
@@ -77,7 +78,7 @@ func TestGetSubjectAccess(t *testing.T) {
 			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
 			roles:               roles("role-1", "some-ns", "deployments", "list"),
 			roleBindings:        roleBindings("role-1", "Role", "test-user"),
-			expected: map[SubjectRef]sets.String{
+			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: "User"}: sets.NewString("create"),
 			},
 		},
@@ -87,7 +88,7 @@ func TestGetSubjectAccess(t *testing.T) {
 			resource:     "deployments",
 			clusterRoles: clusterRoles("clusterrole-1", "deployments", "create"),
 			roleBindings: roleBindings("clusterrole-1", "ClusterRole", "test-user"),
-			expected: map[SubjectRef]sets.String{
+			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: "User"}: sets.NewString("create"),
 			},
 		},
@@ -99,7 +100,7 @@ func TestGetSubjectAccess(t *testing.T) {
 			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
 			roles:               roles("role-1", "some-ns", "configmaps", "list"),
 			roleBindings:        roleBindings("role-1", "Role", "test-user"),
-			expected:            map[SubjectRef]sets.String{},
+			expected:            map[result.SubjectRef]sets.String{},
 		},
 		{
 			name:                "VerbAll role binding",
@@ -109,7 +110,7 @@ func TestGetSubjectAccess(t *testing.T) {
 			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
 			roles:               roles("role-1", "some-ns", "configmaps", v1.VerbAll),
 			roleBindings:        roleBindings("role-1", "Role", "test-user"),
-			expected: map[SubjectRef]sets.String{
+			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: "User"}: sets.NewString(constants.ValidVerbs...),
 			},
 		},
@@ -119,7 +120,7 @@ func TestGetSubjectAccess(t *testing.T) {
 			resource:            "configmaps",
 			clusterRoles:        clusterRoles("clusterrole-1", "configmaps", v1.VerbAll),
 			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
-			expected: map[SubjectRef]sets.String{
+			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: "User"}: sets.NewString(constants.ValidVerbs...),
 			},
 		},
