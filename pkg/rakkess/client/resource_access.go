@@ -19,7 +19,6 @@ package client
 import (
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
@@ -41,33 +40,41 @@ func GetSubjectAccess(opts *options.RakkessOptions, resource string) (*result.Su
 		return nil, err
 	}
 
+	namespace := opts.ConfigFlags.Namespace
+	isNamespace := namespace != nil && *namespace != ""
+
 	sa := result.NewSubjectAccess(resource)
 
 	if err := fetchMatchingClusterRoles(rbacClient, sa); err != nil {
-		logrus.Warnf("ClusterRoles could not be fetched (%s): result will be incomplete", err)
+		if !isNamespace {
+			return nil, err
+		}
+		logrus.Warnf("incomplete result: %s", err)
 	} else if err := resolveClusterRoleBindings(rbacClient, sa); err != nil {
-		logrus.Warnf("ClusterRolesBindings could not be fetched (%s): result will be incomplete", err)
+		if !isNamespace {
+			return nil, err
+		}
+		logrus.Warnf("incomplete result: %s", err)
 	}
 
-	namespace := opts.ConfigFlags.Namespace
-	if err := fetchMatchingRoles(rbacClient, sa, namespace); err != nil {
-		return nil, errors.Wrapf(err, "fetching Roles failed")
+	if !isNamespace {
+		logrus.Debugf("Skipping roles and rolebindings because namespace is missing")
+		return sa, nil
 	}
-	if err := resolveRoleBindings(rbacClient, sa, namespace); err != nil {
-		return nil, errors.Wrapf(err, "fetching RoleBindings failed")
+
+	if err := fetchMatchingRoles(rbacClient, sa, *namespace); err != nil {
+		return nil, err
+	}
+	if err := resolveRoleBindings(rbacClient, sa, *namespace); err != nil {
+		return nil, err
 	}
 
 	return sa, nil
 }
 
-func resolveRoleBindings(rbacClient clientv1.RoleBindingsGetter, sa *result.SubjectAccess, namespace *string) error {
-	if namespace == nil || *namespace == "" {
-		logrus.Debugf("Skipping role resolution because namespace not set")
-		return nil
-	}
-
-	logrus.Debugf("fetching RoleBindings for namespace %s", *namespace)
-	roleBindings, err := rbacClient.RoleBindings(*namespace).List(metav1.ListOptions{})
+func resolveRoleBindings(rbacClient clientv1.RoleBindingsGetter, sa *result.SubjectAccess, namespace string) error {
+	logrus.Debugf("fetching RoleBindings for namespace %s", namespace)
+	roleBindings, err := rbacClient.RoleBindings(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -103,7 +110,6 @@ func fetchMatchingClusterRoles(rbacClient clientv1.ClusterRolesGetter, sa *resul
 	if err != nil {
 		return err
 	}
-	logrus.Tracef("roles: %s", roleList)
 
 	for _, role := range roleList.Items {
 		r := result.RoleRef{
@@ -117,14 +123,9 @@ func fetchMatchingClusterRoles(rbacClient clientv1.ClusterRolesGetter, sa *resul
 	return nil
 }
 
-func fetchMatchingRoles(rbacClient clientv1.RolesGetter, sa *result.SubjectAccess, namespace *string) error {
-	if namespace == nil || *namespace == "" {
-		logrus.Debugf("Skipping role fetching because namespace not set")
-		return nil
-	}
-
-	logrus.Debugf("fetching roles for namespace %s", *namespace)
-	roleList, err := rbacClient.Roles(*namespace).List(metav1.ListOptions{})
+func fetchMatchingRoles(rbacClient clientv1.RolesGetter, sa *result.SubjectAccess, namespace string) error {
+	logrus.Debugf("fetching roles for namespace %s", namespace)
+	roleList, err := rbacClient.Roles(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return err
 	}

@@ -38,7 +38,7 @@ var (
 	terminit   sync.Once
 )
 
-func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results result.ResourceAccess) {
+func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results result.MatrixPrinter) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
 	defer w.Flush()
 

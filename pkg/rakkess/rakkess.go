@@ -26,9 +26,10 @@ import (
 	"github.com/corneliusweig/rakkess/pkg/rakkess/validation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
+func RakkessResource(ctx context.Context, opts *options.RakkessOptions) error {
 	if err := validation.Options(opts); err != nil {
 		return err
 	}
@@ -54,6 +55,40 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 
 	if namespace == nil || *namespace == "" {
 		fmt.Fprintf(opts.Streams.Out, "No namespace given, this implies cluster scope (try -n if this is not intended)\n")
+	}
+
+	return nil
+}
+
+func RakkessSubject(opts *options.RakkessOptions, resource string) error {
+	if err := validation.Options(opts); err != nil {
+		return err
+	}
+
+	mapper, err := opts.ConfigFlags.ToRESTMapper()
+	if err != nil {
+		return errors.Wrap(err, "cannot create k8s REST mapper")
+	}
+	versionedResource, err := mapper.ResourceFor(schema.GroupVersionResource{Resource: resource})
+	if err != nil {
+		return errors.Wrap(err, "determine requested resource")
+	}
+
+	subjectAccess, err := client.GetSubjectAccess(opts, versionedResource.Resource)
+	if err != nil {
+		return errors.Wrap(err, "get subject access")
+	}
+
+	if len(subjectAccess.Get()) == 0 {
+		logrus.Warnf("No subjects with access found. This most likely means that you have insufficient rights to review authorization.")
+		return nil
+	}
+
+	printer.PrintResults(opts.Streams.Out, opts.Verbs, opts.OutputFormat, subjectAccess)
+
+	namespace := opts.ConfigFlags.Namespace
+	if namespace == nil || *namespace == "" {
+		fmt.Fprintf(opts.Streams.Out, "Only ClusterRoleBindings are considered, because no namespace is given.\n")
 	}
 
 	return nil

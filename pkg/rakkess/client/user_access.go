@@ -28,7 +28,7 @@ import (
 )
 
 // todo(corneliusweig) error is always nil
-func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (result.ResourceAccess, error) {
+func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (result.MatrixPrinter, error) {
 	var results []result.ResourceAccessItem
 	group := sync.WaitGroup{}
 	semaphore := make(chan struct{}, 20)

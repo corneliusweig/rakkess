@@ -17,7 +17,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
+	"github.com/corneliusweig/rakkess/pkg/rakkess"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -30,8 +30,9 @@ var resourceCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Long:    `todo`,
 	Run: func(cmd *cobra.Command, args []string) {
-		sa, _ := client.GetSubjectAccess(rakkessOptions, args[0])
-		logrus.Infof("%s", sa.Get())
+		if err := rakkess.RakkessSubject(rakkessOptions, args[0]); err != nil {
+			logrus.Error(err)
+		}
 	},
 }
 
