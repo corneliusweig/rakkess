@@ -17,6 +17,11 @@ limitations under the License.
 package result
 
 import (
+	"fmt"
+	"io"
+	"sort"
+	"strings"
+
 	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	v1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -89,4 +94,54 @@ func expandVerbs(verbs []string) []string {
 		}
 	}
 	return verbs
+}
+
+func (ra *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVerbs []string) {
+	// table header
+	fmt.Fprint(w, "NAME\tKIND")
+	for _, v := range requestedVerbs {
+		fmt.Fprintf(w, "\t%s", strings.ToUpper(v))
+	}
+	fmt.Fprint(w, "\n")
+
+	subjects := make([]SubjectRef, 0, len(ra.subjectAccess))
+	for s, _ := range ra.subjectAccess {
+		subjects = append(subjects, s)
+	}
+	sort.Stable(sortableSubjects(subjects))
+
+	// table body
+	for _, subject := range subjects {
+		verbs := ra.subjectAccess[subject]
+		fmt.Fprintf(w, "%s\t%s", subject.Name, subject.Kind)
+		for _, v := range requestedVerbs {
+			var code int
+			if verbs.Has(v) {
+				code = AccessAllowed
+			} else {
+				code = AccessDenied
+			}
+			fmt.Fprintf(w, "\t%s", converter(code))
+		}
+		fmt.Fprint(w, "\n")
+	}
+}
+
+type sortableSubjects []SubjectRef
+
+func (s sortableSubjects) Len() int      { return len(s) }
+func (s sortableSubjects) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s sortableSubjects) Less(i, j int) bool {
+	ret := strings.Compare(s[i].Name, s[j].Name)
+	if ret > 0 {
+		return false
+	} else if ret == 0 {
+		ret = strings.Compare(s[i].Kind, s[j].Kind)
+		if ret > 0 {
+			return false
+		} else if ret == 0 {
+			return i < j
+		}
+	}
+	return true
 }

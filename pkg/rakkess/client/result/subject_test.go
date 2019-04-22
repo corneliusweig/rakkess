@@ -17,6 +17,8 @@ limitations under the License.
 package result
 
 import (
+	"bytes"
+	"sort"
 	"testing"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
@@ -152,6 +154,81 @@ func TestSubjectAccess_ResolveRoleRef(t *testing.T) {
 	}
 }
 
+func TestSubjectAccess_Print(t *testing.T) {
+	yesNoConverter := func(i int) string {
+		if i == AccessAllowed {
+			return "yes"
+		}
+		return "no"
+	}
+	tests := []struct {
+		name          string
+		subjectAccess map[SubjectRef]sets.String
+		verbs         []string
+		expected      string
+	}{
+		{
+			name: "single row with multiple verbs",
+			subjectAccess: map[SubjectRef]sets.String{
+				SubjectRef{Name: "default", Kind: "service-account"}: sets.NewString("list", "delete"),
+			},
+			verbs:    []string{"list", "get"},
+			expected: "NAME\tKIND\tLIST\tGET\ndefault\tservice-account\tyes\tno\n",
+		},
+		{
+			name: "multiple rows with multiple verbs",
+			subjectAccess: map[SubjectRef]sets.String{
+				SubjectRef{Name: "c-default", Kind: "SA"}: sets.NewString("get", "delete"),
+				SubjectRef{Name: "b-default", Kind: "SA"}: sets.NewString("list", "get"),
+				SubjectRef{Name: "a-default", Kind: "SA"}: sets.NewString("list", "delete"),
+			},
+			verbs:    []string{"list", "get"},
+			expected: "NAME\tKIND\tLIST\tGET\na-default\tSA\tyes\tno\nb-default\tSA\tyes\tyes\nc-default\tSA\tno\tyes\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+			sa := SubjectAccess{subjectAccess: test.subjectAccess}
+			sa.Print(buf, yesNoConverter, test.verbs)
+
+			assert.Equal(t, test.expected, buf.String())
+		})
+	}
+}
+
+func TestSortableSubjects(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  []SubjectRef
+		sorted []SubjectRef
+	}{
+		{
+			name:   "two inputs",
+			input:  []SubjectRef{{Name: "b"}, {Name: "a"}},
+			sorted: []SubjectRef{{Name: "a"}, {Name: "b"}},
+		},
+		{
+			name:   "three inputs",
+			input:  []SubjectRef{{Name: "b"}, {Name: "c"}, {Name: "a"}},
+			sorted: []SubjectRef{{Name: "a"}, {Name: "b"}, {Name: "c"}},
+		},
+		{
+			name:   "fallback to kind",
+			input:  []SubjectRef{{Name: "a", Kind: "c"}, {Name: "a", Kind: "a"}, {Name: "a", Kind: "b"}},
+			sorted: []SubjectRef{{Name: "a", Kind: "a"}, {Name: "a", Kind: "b"}, {Name: "a", Kind: "c"}},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			sort.Stable(sortableSubjects(test.input))
+			assert.Equal(t, test.sorted, test.input)
+		})
+	}
+}
+
 func makeSubjects(in []string) []v1.Subject {
 	var subjects []v1.Subject
 	for _, s := range in {
@@ -162,7 +239,6 @@ func makeSubjects(in []string) []v1.Subject {
 	}
 	return subjects
 }
-
 func toSubject(name string) SubjectRef {
 	return SubjectRef{Name: name, Kind: "some-kind"}
 }
