@@ -43,7 +43,7 @@ func TestVerbs(t *testing.T) {
 	}{
 		{
 			name:  "only valid verbs",
-			verbs: []string{"list", "get", "proxy"},
+			verbs: []string{"list", "get", "deletecollection"},
 		},
 		{
 			name:     "only invalid verbs",
@@ -52,7 +52,7 @@ func TestVerbs(t *testing.T) {
 		},
 		{
 			name:     "valid and invalid verbs",
-			verbs:    []string{"list", "git", "proxy"},
+			verbs:    []string{"list", "git", "deletecollection"},
 			expected: "unexpected verbs: [git]",
 		},
 	}
