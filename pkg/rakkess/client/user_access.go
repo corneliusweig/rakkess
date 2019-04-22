@@ -27,13 +27,6 @@ import (
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
-const (
-	AccessAllowed = iota
-	AccessDenied
-	AccessNotApplicable
-	AccessRequestErr
-)
-
 // todo(corneliusweig) error is always nil
 func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (result.ResourceAccess, error) {
 	var results []result.ResourceAccessItem
@@ -85,7 +78,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 				}
 
 				if !allowedVerbs.Has(v) {
-					access[v] = AccessNotApplicable
+					access[v] = result.AccessNotApplicable
 					continue
 				}
 
@@ -102,7 +95,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 				review, e := sar.Create(review)
 				if e != nil {
 					errs = append(errs, e)
-					access[v] = AccessRequestErr
+					access[v] = result.AccessRequestErr
 				} else {
 					access[v] = resultFor(&review.Status)
 				}
@@ -132,7 +125,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 
 func resultFor(status *v1.SubjectAccessReviewStatus) int {
 	if status.Allowed {
-		return AccessAllowed
+		return result.AccessAllowed
 	}
-	return AccessDenied
+	return result.AccessDenied
 }

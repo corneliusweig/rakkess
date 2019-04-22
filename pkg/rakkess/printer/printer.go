@@ -21,7 +21,6 @@ import (
 	"io"
 	"sync"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
 )
 
@@ -58,13 +57,13 @@ func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, r
 
 func humanreadableAccessCode(code int) string {
 	switch code {
-	case client.AccessAllowed:
+	case result.AccessAllowed:
 		return "✔" // ✓
-	case client.AccessDenied:
+	case result.AccessDenied:
 		return "✖" // ✕
-	case client.AccessNotApplicable:
+	case result.AccessNotApplicable:
 		return ""
-	case client.AccessRequestErr:
+	case result.AccessRequestErr:
 		return "ERR"
 	default:
 		panic("unknown access code")
@@ -77,13 +76,13 @@ func colorHumanreadableAccessCode(code int) string {
 
 func codeToColor(code int) color {
 	switch code {
-	case client.AccessAllowed:
+	case result.AccessAllowed:
 		return green
-	case client.AccessDenied:
+	case result.AccessDenied:
 		return red
-	case client.AccessNotApplicable:
+	case result.AccessNotApplicable:
 		return none
-	case client.AccessRequestErr:
+	case result.AccessRequestErr:
 		return purple
 	}
 	return none
@@ -91,13 +90,13 @@ func codeToColor(code int) color {
 
 func asciiAccessCode(code int) string {
 	switch code {
-	case client.AccessAllowed:
+	case result.AccessAllowed:
 		return "yes"
-	case client.AccessDenied:
+	case result.AccessDenied:
 		return "no"
-	case client.AccessNotApplicable:
+	case result.AccessNotApplicable:
 		return "n/a"
-	case client.AccessRequestErr:
+	case result.AccessRequestErr:
 		return "ERR"
 	default:
 		panic("unknown access code")

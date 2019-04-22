@@ -50,10 +50,10 @@ func (a accessResult) withResult(result int, verbs ...string) accessResult {
 	return a
 }
 func (a accessResult) allowed(verbs ...string) accessResult {
-	return a.withResult(AccessAllowed, verbs...)
+	return a.withResult(result.AccessAllowed, verbs...)
 }
 func (a accessResult) denied(verbs ...string) accessResult {
-	return a.withResult(AccessDenied, verbs...)
+	return a.withResult(result.AccessDenied, verbs...)
 }
 func (a accessResult) get() map[string]int {
 	return a
@@ -90,7 +90,7 @@ func TestCheckResourceAccess(t *testing.T) {
 						Group:    "group1",
 						Verb:     "list",
 					},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 			},
 			expected: []result.ResourceAccessItem{
@@ -102,7 +102,7 @@ func TestCheckResourceAccess(t *testing.T) {
 			verbs: []string{"patch"},
 			input: []GroupResource{toGroupResource("group1", "resource1", "list")},
 			expected: []result.ResourceAccessItem{
-				{Name: "resource1.group1", Access: buildAccess().withResult(AccessNotApplicable, "patch").get()},
+				{Name: "resource1.group1", Access: buildAccess().withResult(result.AccessNotApplicable, "patch").get()},
 			},
 		},
 		{
@@ -112,15 +112,15 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "delete"},
-					AccessDenied,
+					result.AccessDenied,
 				},
 			},
 			expected: []result.ResourceAccessItem{
@@ -140,11 +140,11 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "list"},
-					AccessDenied,
+					result.AccessDenied,
 				},
 			},
 			expected: []result.ResourceAccessItem{
@@ -169,19 +169,19 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
-					AccessDenied,
+					result.AccessDenied,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "create"},
-					AccessDenied,
+					result.AccessDenied,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group2", Verb: "list"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 			},
 			expected: []result.ResourceAccessItem{
@@ -191,11 +191,11 @@ func TestCheckResourceAccess(t *testing.T) {
 				},
 				{
 					Name:   "resource1.group2",
-					Access: buildAccess().withResult(AccessNotApplicable, "create").allowed("list").get(),
+					Access: buildAccess().withResult(result.AccessNotApplicable, "create").allowed("list").get(),
 				},
 				{
 					Name:   "resource2.group1",
-					Access: buildAccess().denied("create").withResult(AccessNotApplicable, "list").get(),
+					Access: buildAccess().denied("create").withResult(result.AccessNotApplicable, "list").get(),
 				},
 			},
 		},
@@ -210,7 +210,7 @@ func TestCheckResourceAccess(t *testing.T) {
 
 					for _, d := range test.decisions {
 						if d.matches(sar) {
-							sar.Status.Allowed = d.decision == AccessAllowed
+							sar.Status.Allowed = d.decision == result.AccessAllowed
 							return true, sar, nil
 						}
 					}

@@ -18,6 +18,13 @@ package result
 
 import "io"
 
+const (
+	AccessAllowed = iota
+	AccessDenied
+	AccessNotApplicable
+	AccessRequestErr
+)
+
 // CodeConverter converts an access code to a human-readable string.
 type CodeConverter func(int) string
 

@@ -21,7 +21,6 @@ import (
 	"io"
 	"testing"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,10 +37,10 @@ func (a accessResult) withResult(result int, verbs ...string) accessResult {
 	return a
 }
 func (a accessResult) allowed(verbs ...string) accessResult {
-	return a.withResult(client.AccessAllowed, verbs...)
+	return a.withResult(result.AccessAllowed, verbs...)
 }
 func (a accessResult) denied(verbs ...string) accessResult {
-	return a.withResult(client.AccessDenied, verbs...)
+	return a.withResult(result.AccessDenied, verbs...)
 }
 func (a accessResult) get() map[string]int {
 	return a
@@ -80,7 +79,7 @@ func TestPrintResults(t *testing.T) {
 			"single result, all not applicable",
 			[]string{"get", "list"},
 			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().withResult(client.AccessNotApplicable, "get", "list").get()},
+				{Name: "resource1", Access: buildAccess().withResult(result.AccessNotApplicable, "get", "list").get()},
 			},
 			HEADER + "resource1       \n",
 			HEADER + "resource1  \033[0m\033[0m     \033[0m\033[0m\n",
@@ -90,7 +89,7 @@ func TestPrintResults(t *testing.T) {
 			"single result, all ERR",
 			[]string{"get", "list"},
 			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().withResult(client.AccessRequestErr, "get", "list").get()},
+				{Name: "resource1", Access: buildAccess().withResult(result.AccessRequestErr, "get", "list").get()},
 			},
 			HEADER + "resource1  ERR  ERR\n",
 			HEADER + "resource1  \033[35mERR\033[0m  \033[35mERR\033[0m\n",
