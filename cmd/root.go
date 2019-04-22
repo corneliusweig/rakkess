@@ -39,6 +39,9 @@ const (
 	rakkessLongDescription = `
 Show an access matrix for all server resources
 
+This command slices the authorization space (subject, resource, verb)
+along a plane of fixed subject.
+
 Rakkess retrieves the full list of server resources, checks access for
 the current user with the given verbs, and prints the result as a matrix.
 This complements the usual "kubectl auth can-i" command, which works for
