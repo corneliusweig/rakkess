@@ -119,7 +119,7 @@ func TestResourceAccess_Print(t *testing.T) {
 				},
 			},
 			verbs:    []string{"list"},
-			expected: "NAME\tLIST\nresource1no\nresource2\tno\nresource3\tyes\n",
+			expected: "NAME\tLIST\nresource1\tno\nresource2\tno\nresource3\tyes\n",
 		},
 	}
 

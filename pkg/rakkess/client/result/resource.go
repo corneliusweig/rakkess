@@ -23,11 +23,6 @@ import (
 	"strings"
 )
 
-type CodeConverter func(int) string
-type MatrixPrinter interface {
-	Print(w io.Writer, converter CodeConverter, requestedVerbs []string)
-}
-
 type ResourceAccessItem struct {
 	Name   string
 	Access map[string]int
