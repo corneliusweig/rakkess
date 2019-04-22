@@ -19,7 +19,7 @@ NOTICE: Up to some modifications concerning 'CollapseEscape',
         this is the original tabwriter from text/tabwriter
 */
 
-package util
+package printer
 
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style

@@ -1,4 +1,4 @@
-// +build windows
+// +build !windows
 
 /*
 Copyright 2019 Cornelius Weig
@@ -21,29 +21,22 @@ limitations under the License.
 //   https://github.com/sirupsen/logrus/blob/master/terminal_check_notappengine.go
 //   https://github.com/sirupsen/logrus/blob/master/terminal_windows.go
 
-package util
+package printer
 
 import (
 	"io"
 	"os"
-	"syscall"
 
-	sequences "github.com/konsorten/go-windows-terminal-sequences"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
-// initTerminal enables ANSI color escape on windows. Usually, this is done by logrus, but
-// since we don't log anything before printing, we need to take care of this ourselves.
-func initTerminal(w io.Writer) {
-	if f, ok := w.(*os.File); ok {
-		sequences.EnableVirtualTerminalProcessing(syscall.Handle(f.Fd()), true)
-	}
+// initTerminal enables ANSI color escape sequences. On UNIX, they are always enabled.
+func initTerminal(_ io.Writer) {
 }
 
 func isTerminal(w io.Writer) bool {
 	if f, ok := w.(*os.File); ok {
-		var mode uint32
-		err := syscall.GetConsoleMode(syscall.Handle(f.Fd()), &mode)
-		return err == nil
+		return terminal.IsTerminal(int(f.Fd()))
 	}
 	return false
 }

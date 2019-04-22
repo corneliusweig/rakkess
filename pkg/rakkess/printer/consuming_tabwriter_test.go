@@ -7,7 +7,7 @@ NOTICE: Up to some modifications concerning 'CollapseEscape',
         this is the original tabwriter test from text/tabwriter
 */
 
-package util_test
+package printer
 
 import (
 	"bytes"
@@ -15,8 +15,6 @@ import (
 	"io"
 	"io/ioutil"
 	"testing"
-
-	. "github.com/corneliusweig/rakkess/pkg/rakkess/util"
 )
 
 type buffer struct {

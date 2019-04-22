@@ -22,16 +22,14 @@ import (
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/util"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/printer"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/validation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
-	if err := util.ValidateVerbs(opts.Verbs); err != nil {
-		return err
-	}
-	if err := util.ValidateOutputFormat(opts.Output); err != nil {
+	if err := validation.Options(opts); err != nil {
 		return err
 	}
 
@@ -52,7 +50,7 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 		return errors.Wrap(err, "check resource access")
 	}
 
-	util.PrintResults(opts.Streams.Out, opts.Verbs, outputFormat(opts), results)
+	printer.PrintResults(opts.Streams.Out, opts.Verbs, outputFormat(opts), results)
 
 	if namespace == nil || *namespace == "" {
 		fmt.Fprintf(opts.Streams.Out, "No namespace given, this implies cluster scope (try -n if this is not intended)\n")
@@ -61,9 +59,9 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 	return nil
 }
 
-func outputFormat(o *options.RakkessOptions) util.OutputFormat {
+func outputFormat(o *options.RakkessOptions) printer.OutputFormat {
 	if o.Output == "ascii-table" {
-		return util.ASCIITable
+		return printer.ASCIITable
 	}
-	return util.IconTable
+	return printer.IconTable
 }
