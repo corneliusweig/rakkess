@@ -1,7 +1,9 @@
 # rakkess
 [![Build Status](https://travis-ci.com/corneliusweig/rakkess.svg?branch=master)](https://travis-ci.com/corneliusweig/rakkess)
 [![Code Coverage](https://codecov.io/gh/corneliusweig/rakkess/branch/master/graph/badge.svg)](https://codecov.io/gh/corneliusweig/rakkess)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Go Report Card](https://goreportcard.com/badge/corneliusweig/rakkess)](https://goreportcard.com/report/corneliusweig/rakkess)
+[![LICENSE](https://img.shields.io/github/license/corneliusweig/rakkess.svg)](https://github.com/corneliusweig/rakkess/blob/master/LICENSE)
+[![Releases](https://img.shields.io/github/release-pre/corneliusweig/rakkess.svg)](https://github.com/corneliusweig/rakkess/releases)
 
 Review Access - kubectl plugin to show an access matrix for all available resources
 
