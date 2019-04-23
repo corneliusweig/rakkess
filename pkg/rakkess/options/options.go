@@ -25,10 +25,10 @@ import (
 )
 
 type RakkessOptions struct {
-	ConfigFlags *genericclioptions.ConfigFlags
-	Verbs       []string
-	Output      string
-	Streams     *genericclioptions.IOStreams
+	ConfigFlags  *genericclioptions.ConfigFlags
+	Verbs        []string
+	OutputFormat string
+	Streams      *genericclioptions.IOStreams
 }
 
 func NewRakkessOptions() *RakkessOptions {

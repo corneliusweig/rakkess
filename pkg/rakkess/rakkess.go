@@ -26,9 +26,10 @@ import (
 	"github.com/corneliusweig/rakkess/pkg/rakkess/validation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
+func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 	if err := validation.Options(opts); err != nil {
 		return err
 	}
@@ -37,7 +38,7 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 	if err != nil {
 		return errors.Wrap(err, "fetch available group resources")
 	}
-	logrus.Info(grs)
+	logrus.Debug(grs)
 
 	authClient, err := opts.GetAuthClient()
 	if err != nil {
@@ -50,7 +51,7 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 		return errors.Wrap(err, "check resource access")
 	}
 
-	printer.PrintResults(opts.Streams.Out, opts.Verbs, outputFormat(opts), results)
+	printer.PrintResults(opts.Streams.Out, opts.Verbs, opts.OutputFormat, results)
 
 	if namespace == nil || *namespace == "" {
 		fmt.Fprintf(opts.Streams.Out, "No namespace given, this implies cluster scope (try -n if this is not intended)\n")
@@ -59,9 +60,36 @@ func Rakkess(ctx context.Context, opts *options.RakkessOptions) error {
 	return nil
 }
 
-func outputFormat(o *options.RakkessOptions) printer.OutputFormat {
-	if o.Output == "ascii-table" {
-		return printer.ASCIITable
+func Subject(opts *options.RakkessOptions, resource string) error {
+	if err := validation.Options(opts); err != nil {
+		return err
 	}
-	return printer.IconTable
+
+	mapper, err := opts.ConfigFlags.ToRESTMapper()
+	if err != nil {
+		return errors.Wrap(err, "cannot create k8s REST mapper")
+	}
+	versionedResource, err := mapper.ResourceFor(schema.GroupVersionResource{Resource: resource})
+	if err != nil {
+		return errors.Wrap(err, "determine requested resource")
+	}
+
+	subjectAccess, err := client.GetSubjectAccess(opts, versionedResource.Resource)
+	if err != nil {
+		return errors.Wrap(err, "get subject access")
+	}
+
+	if len(subjectAccess.Get()) == 0 {
+		logrus.Warnf("No subjects with access found. This most likely means that you have insufficient rights to review authorization.")
+		return nil
+	}
+
+	printer.PrintResults(opts.Streams.Out, opts.Verbs, opts.OutputFormat, subjectAccess)
+
+	namespace := opts.ConfigFlags.Namespace
+	if namespace == nil || *namespace == "" {
+		fmt.Fprintf(opts.Streams.Out, "Only ClusterRoleBindings are considered, because no namespace is given.\n")
+	}
+
+	return nil
 }

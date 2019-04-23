@@ -19,10 +19,9 @@ package printer
 import (
 	"fmt"
 	"io"
-	"strings"
 	"sync"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
 )
 
 type color int
@@ -39,51 +38,32 @@ var (
 	terminit   sync.Once
 )
 
-type OutputFormat int
-
-const (
-	IconTable  OutputFormat = iota
-	ASCIITable OutputFormat = iota
-)
-
-func PrintResults(out io.Writer, requestedVerbs []string, outputFormat OutputFormat, results []client.Result) {
+func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results result.MatrixPrinter) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
 	defer w.Flush()
 
 	terminit.Do(func() { initTerminal(out) })
 
-	fmt.Fprint(w, "NAME")
-	for _, v := range requestedVerbs {
-		fmt.Fprintf(w, "\t%s", strings.ToUpper(v))
-	}
-	fmt.Fprint(w, "\n")
-
 	codeConverter := humanreadableAccessCode
 	if IsTerminal(out) {
 		codeConverter = colorHumanreadableAccessCode
 	}
-	if outputFormat == ASCIITable {
+	if outputFormat == "ascii-table" {
 		codeConverter = asciiAccessCode
 	}
 
-	for _, r := range results {
-		fmt.Fprintf(w, "%s", r.Name)
-		for _, v := range requestedVerbs {
-			fmt.Fprintf(w, "\t%s", codeConverter(r.Access[v]))
-		}
-		fmt.Fprint(w, "\n")
-	}
+	results.Print(w, codeConverter, requestedVerbs)
 }
 
 func humanreadableAccessCode(code int) string {
 	switch code {
-	case client.AccessAllowed:
+	case result.AccessAllowed:
 		return "✔" // ✓
-	case client.AccessDenied:
+	case result.AccessDenied:
 		return "✖" // ✕
-	case client.AccessNotApplicable:
+	case result.AccessNotApplicable:
 		return ""
-	case client.AccessRequestErr:
+	case result.AccessRequestErr:
 		return "ERR"
 	default:
 		panic("unknown access code")
@@ -96,13 +76,13 @@ func colorHumanreadableAccessCode(code int) string {
 
 func codeToColor(code int) color {
 	switch code {
-	case client.AccessAllowed:
+	case result.AccessAllowed:
 		return green
-	case client.AccessDenied:
+	case result.AccessDenied:
 		return red
-	case client.AccessNotApplicable:
+	case result.AccessNotApplicable:
 		return none
-	case client.AccessRequestErr:
+	case result.AccessRequestErr:
 		return purple
 	}
 	return none
@@ -110,13 +90,13 @@ func codeToColor(code int) color {
 
 func asciiAccessCode(code int) string {
 	switch code {
-	case client.AccessAllowed:
+	case result.AccessAllowed:
 		return "yes"
-	case client.AccessDenied:
+	case result.AccessDenied:
 		return "no"
-	case client.AccessNotApplicable:
+	case result.AccessNotApplicable:
 		return "n/a"
-	case client.AccessRequestErr:
+	case result.AccessRequestErr:
 		return "ERR"
 	default:
 		panic("unknown access code")

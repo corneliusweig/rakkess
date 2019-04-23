@@ -18,9 +18,9 @@ package client
 
 import (
 	"context"
-	"sort"
 	"testing"
 
+	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/authorization/v1"
 	apiV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,10 +50,10 @@ func (a accessResult) withResult(result int, verbs ...string) accessResult {
 	return a
 }
 func (a accessResult) allowed(verbs ...string) accessResult {
-	return a.withResult(AccessAllowed, verbs...)
+	return a.withResult(result.AccessAllowed, verbs...)
 }
 func (a accessResult) denied(verbs ...string) accessResult {
-	return a.withResult(AccessDenied, verbs...)
+	return a.withResult(result.AccessDenied, verbs...)
 }
 func (a accessResult) get() map[string]int {
 	return a
@@ -77,7 +77,7 @@ func TestCheckResourceAccess(t *testing.T) {
 		verbs     []string
 		input     []GroupResource
 		decisions []*SelfSubjectAccessReviewDecision
-		expected  []Result
+		expected  []result.ResourceAccessItem
 	}{
 		{
 			name:  "single resource, single verb",
@@ -90,10 +90,10 @@ func TestCheckResourceAccess(t *testing.T) {
 						Group:    "group1",
 						Verb:     "list",
 					},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 			},
-			expected: []Result{
+			expected: []result.ResourceAccessItem{
 				{Name: "resource1.group1", Access: buildAccess().allowed("list").get()},
 			},
 		},
@@ -101,8 +101,8 @@ func TestCheckResourceAccess(t *testing.T) {
 			name:  "single resource, invalid verb",
 			verbs: []string{"patch"},
 			input: []GroupResource{toGroupResource("group1", "resource1", "list")},
-			expected: []Result{
-				{Name: "resource1.group1", Access: buildAccess().withResult(AccessNotApplicable, "patch").get()},
+			expected: []result.ResourceAccessItem{
+				{Name: "resource1.group1", Access: buildAccess().withResult(result.AccessNotApplicable, "patch").get()},
 			},
 		},
 		{
@@ -112,18 +112,18 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "delete"},
-					AccessDenied,
+					result.AccessDenied,
 				},
 			},
-			expected: []Result{
+			expected: []result.ResourceAccessItem{
 				{
 					Name:   "resource1.group1",
 					Access: buildAccess().allowed("list", "create").denied("delete").get(),
@@ -140,14 +140,14 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "list"},
-					AccessDenied,
+					result.AccessDenied,
 				},
 			},
-			expected: []Result{
+			expected: []result.ResourceAccessItem{
 				{
 					Name:   "resource1.group1",
 					Access: buildAccess().allowed("list").get(),
@@ -169,33 +169,33 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
-					AccessDenied,
+					result.AccessDenied,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "create"},
-					AccessDenied,
+					result.AccessDenied,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group2", Verb: "list"},
-					AccessAllowed,
+					result.AccessAllowed,
 				},
 			},
-			expected: []Result{
+			expected: []result.ResourceAccessItem{
 				{
 					Name:   "resource1.group1",
 					Access: buildAccess().allowed("list").denied("create").get(),
 				},
 				{
 					Name:   "resource1.group2",
-					Access: buildAccess().withResult(AccessNotApplicable, "create").allowed("list").get(),
+					Access: buildAccess().withResult(result.AccessNotApplicable, "create").allowed("list").get(),
 				},
 				{
 					Name:   "resource2.group1",
-					Access: buildAccess().denied("create").withResult(AccessNotApplicable, "list").get(),
+					Access: buildAccess().denied("create").withResult(result.AccessNotApplicable, "list").get(),
 				},
 			},
 		},
@@ -210,7 +210,7 @@ func TestCheckResourceAccess(t *testing.T) {
 
 					for _, d := range test.decisions {
 						if d.matches(sar) {
-							sar.Status.Allowed = d.decision == AccessAllowed
+							sar.Status.Allowed = d.decision == result.AccessAllowed
 							return true, sar, nil
 						}
 					}
@@ -220,51 +220,7 @@ func TestCheckResourceAccess(t *testing.T) {
 			results, err := CheckResourceAccess(ctx, fakeReviews, test.input, test.verbs, nil)
 
 			assert.NoError(t, err)
-			assert.Equal(t, test.expected, results)
-		})
-	}
-}
-
-func TestSortResult(t *testing.T) {
-	makeResult := func(key string, value int) map[string]int {
-		result := make(map[string]int)
-		result[key] = value
-		return result
-	}
-	tests := []struct {
-		name   string
-		input  []Result
-		sorted []Result
-	}{
-		{
-			name:   "two inputs",
-			input:  []Result{{Name: "b second"}, {Name: "a first"}},
-			sorted: []Result{{Name: "a first"}, {Name: "b second"}},
-		},
-		{
-			name:   "three inputs",
-			input:  []Result{{Name: "b second"}, {Name: "c third"}, {Name: "a first"}},
-			sorted: []Result{{Name: "a first"}, {Name: "b second"}, {Name: "c third"}},
-		},
-		{
-			name: "three inputs, stable",
-			input: []Result{
-				{Name: "same", Access: makeResult("b", 1)},
-				{Name: "same", Access: makeResult("a", 2)},
-				{Name: "same", Access: makeResult("c", 3)},
-			},
-			sorted: []Result{
-				{Name: "same", Access: makeResult("b", 1)},
-				{Name: "same", Access: makeResult("a", 2)},
-				{Name: "same", Access: makeResult("c", 3)},
-			},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			sort.Stable(sortableResult(test.input))
-			assert.Equal(t, test.sorted, test.input)
+			assert.Equal(t, result.NewResourceAccess(test.expected), results)
 		})
 	}
 }

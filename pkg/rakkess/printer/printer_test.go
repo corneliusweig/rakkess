@@ -21,7 +21,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,10 +37,10 @@ func (a accessResult) withResult(result int, verbs ...string) accessResult {
 	return a
 }
 func (a accessResult) allowed(verbs ...string) accessResult {
-	return a.withResult(client.AccessAllowed, verbs...)
+	return a.withResult(result.AccessAllowed, verbs...)
 }
 func (a accessResult) denied(verbs ...string) accessResult {
-	return a.withResult(client.AccessDenied, verbs...)
+	return a.withResult(result.AccessDenied, verbs...)
 }
 func (a accessResult) get() map[string]int {
 	return a
@@ -52,7 +52,7 @@ func TestPrintResults(t *testing.T) {
 	tests := []struct {
 		name          string
 		verbs         []string
-		given         []client.Result
+		given         result.ResourceAccess
 		expected      string
 		expectedColor string
 		expectedASCII string
@@ -60,9 +60,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all allowed",
 			[]string{"get", "list"},
-			[]client.Result{
-				{Name: "resource1", Access: buildAccess().allowed("get", "list").get()},
-			},
+			[]result.ResourceAccessItem{{Name: "resource1", Access: buildAccess().allowed("get", "list").get()}},
 			HEADER + "resource1  ✔    ✔\n",
 			HEADER + "resource1  \033[32m✔\033[0m    \033[32m✔\033[0m\n",
 			HEADER + "resource1  yes  yes\n",
@@ -70,7 +68,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all forbidden",
 			[]string{"get", "list"},
-			[]client.Result{
+			[]result.ResourceAccessItem{
 				{Name: "resource1", Access: buildAccess().denied("get", "list").get()},
 			},
 			HEADER + "resource1  ✖    ✖\n",
@@ -80,8 +78,8 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all not applicable",
 			[]string{"get", "list"},
-			[]client.Result{
-				{Name: "resource1", Access: buildAccess().withResult(client.AccessNotApplicable, "get", "list").get()},
+			[]result.ResourceAccessItem{
+				{Name: "resource1", Access: buildAccess().withResult(result.AccessNotApplicable, "get", "list").get()},
 			},
 			HEADER + "resource1       \n",
 			HEADER + "resource1  \033[0m\033[0m     \033[0m\033[0m\n",
@@ -90,8 +88,8 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all ERR",
 			[]string{"get", "list"},
-			[]client.Result{
-				{Name: "resource1", Access: buildAccess().withResult(client.AccessRequestErr, "get", "list").get()},
+			[]result.ResourceAccessItem{
+				{Name: "resource1", Access: buildAccess().withResult(result.AccessRequestErr, "get", "list").get()},
 			},
 			HEADER + "resource1  ERR  ERR\n",
 			HEADER + "resource1  \033[35mERR\033[0m  \033[35mERR\033[0m\n",
@@ -100,7 +98,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, mixed",
 			[]string{"get", "list"},
-			[]client.Result{
+			[]result.ResourceAccessItem{
 				{Name: "resource1", Access: buildAccess().allowed("list").denied("get").get()},
 			},
 			HEADER + "resource1  ✖    ✔\n",
@@ -110,7 +108,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"many results",
 			[]string{"get"},
-			[]client.Result{
+			[]result.ResourceAccessItem{
 				{Name: "resource1", Access: buildAccess().denied("get").get()},
 				{Name: "resource2", Access: buildAccess().allowed("get").get()},
 				{Name: "resource3", Access: buildAccess().denied("get").get()},
@@ -125,13 +123,13 @@ func TestPrintResults(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, IconTable, test.given)
+			PrintResults(buf, test.verbs, "icon-table", test.given)
 
 			assert.Equal(t, test.expected, buf.String())
 
 			buf = &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, ASCIITable, test.given)
+			PrintResults(buf, test.verbs, "ascii-table", test.given)
 
 			assert.Equal(t, test.expectedASCII, buf.String())
 		})
@@ -149,13 +147,13 @@ func TestPrintResults(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, IconTable, test.given)
+			PrintResults(buf, test.verbs, "icon-table", test.given)
 
 			assert.Equal(t, test.expectedColor, buf.String())
 
 			buf = &bytes.Buffer{}
 
-			PrintResults(buf, test.verbs, ASCIITable, test.given)
+			PrintResults(buf, test.verbs, "ascii-table", test.given)
 
 			assert.Equal(t, test.expectedASCII, buf.String())
 		})

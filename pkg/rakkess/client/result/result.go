@@ -14,25 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package result
 
-import (
-	"context"
-	"os"
-	"os/signal"
-	"syscall"
+import "io"
+
+const (
+	AccessAllowed = iota
+	AccessDenied
+	AccessNotApplicable
+	AccessRequestErr
 )
 
-func catchCtrlC(cancel context.CancelFunc) {
-	catchSigs(cancel, syscall.SIGINT, syscall.SIGPIPE, syscall.SIGTERM)
-}
+// CodeConverter converts an access code to a human-readable string.
+type CodeConverter func(int) string
 
-func catchSigs(cancel context.CancelFunc, sigs ...os.Signal) {
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, sigs...)
-
-	go func() {
-		<-sigChan
-		cancel()
-	}()
+// MatrixPrinter needs to be implemented by result types.
+type MatrixPrinter interface {
+	// Print writes the result for the requestedVerbs to w using the code converter.
+	Print(w io.Writer, converter CodeConverter, requestedVerbs []string)
 }

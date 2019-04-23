@@ -12,7 +12,7 @@ func Options(opts *options.RakkessOptions) error {
 	if err := verbs(opts.Verbs); err != nil {
 		return err
 	}
-	if err := outputFormat(opts.Output); err != nil {
+	if err := outputFormat(opts.OutputFormat); err != nil {
 		return err
 	}
 	return nil
