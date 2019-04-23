@@ -1,7 +1,7 @@
 <!-- DO NOT MOVE THIS FILE, BECAUSE IT NEEDS A PERMANENT ADDRESS -->
 
 # Usage
-![rakkess demo](demo-small.png "rakkess demo")
+![rakkess demo](demo-user-smaller.png "rakkess demo")
 
 If you installed via [krew](https://github.com/kubernetes-sigs/krew) do
 ```bash
@@ -17,7 +17,7 @@ kubectl access-matrix
 - `--verbosity` set the log level (one of debug, info, warn, error, fatal, panic).
 
 ## Examples
-Show access for all resources
+#### Show access for all resources
 - ... at cluster scope
   ```bash
   kubectl access-matrix
@@ -31,7 +31,7 @@ Show access for all resources
 
 - ... with verbs
   ```bash
-  kubectl access-matrix --verbs get,delete,watch,proxy
+  kubectl access-matrix --verbs get,delete,watch,patch
   ```
 
 - ... for another user
@@ -42,6 +42,30 @@ Show access for all resources
 - ... and combine with common `kubectl` parameters
   ```bash
   KUBECONFIG=otherconfig kubectl access-matrix --context other-context
+
+#### Show subjects with access to a given resource
+![rakkess demo](demo-resource-smaller.png "rakkess resource demo")
+- ...globally in all namespaces (only `ClusterRoleBindings`)
+  ```bash
+  kubectl access-matrix resource configmaps
+  ```
+  
+- ...in a given namespace (`RoleBindings` and `ClusterRoleBindings`)
+  ```bash
+  kubectl access-matrix resource configmaps -n default
+  ```
+
+- ...with shorthand notation
+  ```bash
+  kubectl access-matrix r cm   # same as kubectl access-matrix resource configmaps
+  ```
+
+- .. with custom verbs
+  ```bash
+  kubectl access-matrix r cm --verbs get,delete,watch,patch
+  ```
+  
+As `rakkess resource` needs to query `Roles`, `ClusterRoles`, and their bindings, it usually requires administrative cluster access.
 
 ## Getting help
 ```bash

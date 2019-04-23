@@ -14,10 +14,10 @@ This is what `rakkess` is for.
 It lists access rights for the current user for all server resources.
 
 ## Demo
-![rakkess demo](doc/demo-small.png "rakkess demo")
+![rakkess demo](doc/demo-user-smaller.png "rakkess demo")
 
 ## Examples
-Show access for all resources
+#### Show access for all resources
 - ... at cluster scope
   ```bash
   rakkess
@@ -30,7 +30,7 @@ Show access for all resources
 
 - ... with verbs
   ```bash
-  rakkess --verbs get,delete,watch,proxy
+  rakkess --verbs get,delete,watch,patch
   ```
 
 - ... for another user
@@ -42,6 +42,30 @@ Show access for all resources
   ```bash
   KUBECONFIG=otherconfig rakkess --context other-context
   ```
+  
+#### Show subjects with access to a given resource
+![rakkess demo](doc/demo-resource-smaller.png "rakkess resource demo")
+- ...globally in all namespaces (only `ClusterRoleBindings`)
+  ```bash
+  rakkess resource configmaps
+  ```
+  
+- ...in a given namespace (`RoleBindings` and `ClusterRoleBindings`)
+  ```bash
+  rakkess resource configmaps -n default
+  ```
+
+- ...with shorthand notation
+  ```bash
+  rakkess r cm   # same as rakkess resource configmaps
+  ```
+
+- .. with custom verbs
+  ```bash
+  rakkess r cm --verbs get,delete,watch,patch
+  ```
+  
+As `rakkess resource` needs to query `Roles`, `ClusterRoles`, and their bindings, it usually requires administrative cluster access.
 
 Also see [Usage](doc/USAGE.md).
 

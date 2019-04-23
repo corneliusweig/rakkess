@@ -61,7 +61,7 @@ More on https://github.com/corneliusweig/rakkess/blob/v0.2.1/doc/USAGE.md#usage
   $ rakkess --as other-user
 
   Review access for different verbs
-  $ rakkess --verbs get,watch,proxy
+  $ rakkess --verbs get,watch,patch
 `
 )
 
