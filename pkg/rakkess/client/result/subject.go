@@ -35,7 +35,7 @@ type RoleRef struct {
 
 // SubjectRef uniquely identifies the subject of a RoleBinding or ClusterRoleBinding
 type SubjectRef struct {
-	Name, Kind string
+	Name, Kind, Namespace string
 }
 
 type SubjectAccess struct {
@@ -63,8 +63,9 @@ func (sa *SubjectAccess) ResolveRoleRef(r RoleRef, subjects []v1.Subject) {
 	}
 	for _, subject := range subjects {
 		s := SubjectRef{
-			Name: subject.Name,
-			Kind: subject.Kind,
+			Name:      subject.Name,
+			Kind:      subject.Kind,
+			Namespace: subject.Namespace,
 		}
 		if verbs, ok := sa.subjectAccess[s]; ok {
 			sa.subjectAccess[s] = verbs.Union(verbsForRole)
@@ -98,7 +99,7 @@ func expandVerbs(verbs []string) []string {
 
 func (ra *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVerbs []string) {
 	// table header
-	fmt.Fprint(w, "NAME\tKIND")
+	fmt.Fprint(w, "NAME\tKIND\tSA-NAMESPACE")
 	for _, v := range requestedVerbs {
 		fmt.Fprintf(w, "\t%s", strings.ToUpper(v))
 	}
@@ -116,7 +117,7 @@ func (ra *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVe
 		if !verbs.HasAny(requestedVerbs...) {
 			continue
 		}
-		fmt.Fprintf(w, "%s\t%s", subject.Name, subject.Kind)
+		fmt.Fprintf(w, "%s\t%s\t%s", subject.Name, subject.Kind, subject.Namespace)
 		for _, v := range requestedVerbs {
 			var code int
 			if verbs.Has(v) {

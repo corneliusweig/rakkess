@@ -170,30 +170,30 @@ func TestSubjectAccess_Print(t *testing.T) {
 		{
 			name: "single row with multiple verbs",
 			subjectAccess: map[SubjectRef]sets.String{
-				SubjectRef{Name: "default", Kind: "service-account"}: sets.NewString("list", "delete"),
+				SubjectRef{Name: "default", Kind: "service-account", Namespace: "some-ns"}: sets.NewString("list", "delete"),
 			},
 			verbs:    []string{"list", "get"},
-			expected: "NAME\tKIND\tLIST\tGET\ndefault\tservice-account\tyes\tno\n",
+			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\ndefault\tservice-account\tsome-ns\tyes\tno\n",
 		},
 		{
 			name: "multiple rows with multiple verbs",
 			subjectAccess: map[SubjectRef]sets.String{
-				SubjectRef{Name: "c-default", Kind: "SA"}: sets.NewString("get", "delete"),
-				SubjectRef{Name: "b-default", Kind: "SA"}: sets.NewString("list", "get"),
-				SubjectRef{Name: "a-default", Kind: "SA"}: sets.NewString("list", "delete"),
+				SubjectRef{Name: "c-default", Kind: "SA-c", Namespace: "ns-c"}: sets.NewString("get", "delete"),
+				SubjectRef{Name: "b-default", Kind: "SA-b", Namespace: "ns-b"}: sets.NewString("list", "get"),
+				SubjectRef{Name: "a-default", Kind: "SA-a", Namespace: "ns-a"}: sets.NewString("list", "delete"),
 			},
 			verbs:    []string{"list", "get"},
-			expected: "NAME\tKIND\tLIST\tGET\na-default\tSA\tyes\tno\nb-default\tSA\tyes\tyes\nc-default\tSA\tno\tyes\n",
+			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\na-default\tSA-a\tns-a\tyes\tno\nb-default\tSA-b\tns-b\tyes\tyes\nc-default\tSA-c\tns-c\tno\tyes\n",
 		},
 		{
 			name: "ignore row without matches",
 			subjectAccess: map[SubjectRef]sets.String{
-				SubjectRef{Name: "c-default", Kind: "SA"}: sets.NewString("get", "delete"),
-				SubjectRef{Name: "b-default", Kind: "SA"}: sets.NewString("delete", "update"),
-				SubjectRef{Name: "a-default", Kind: "SA"}: sets.NewString("list", "delete"),
+				SubjectRef{Name: "c-default", Kind: "SA-c", Namespace: "ns-c"}: sets.NewString("get", "delete"),
+				SubjectRef{Name: "b-default", Kind: "SA-b", Namespace: "ns-b"}: sets.NewString("delete", "update"),
+				SubjectRef{Name: "a-default", Kind: "SA-a", Namespace: "ns-a"}: sets.NewString("list", "delete"),
 			},
 			verbs:    []string{"list", "get"},
-			expected: "NAME\tKIND\tLIST\tGET\na-default\tSA\tyes\tno\nc-default\tSA\tno\tyes\n",
+			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\na-default\tSA-a\tns-a\tyes\tno\nc-default\tSA-c\tns-c\tno\tyes\n",
 		},
 	}
 
@@ -243,12 +243,13 @@ func makeSubjects(in []string) []v1.Subject {
 	var subjects []v1.Subject
 	for _, s := range in {
 		subjects = append(subjects, v1.Subject{
-			Name: s,
-			Kind: "some-kind",
+			Name:      s,
+			Kind:      "some-kind",
+			Namespace: "some-ns",
 		})
 	}
 	return subjects
 }
 func toSubject(name string) SubjectRef {
-	return SubjectRef{Name: name, Kind: "some-kind"}
+	return SubjectRef{Name: name, Kind: "some-kind", Namespace: "some-ns"}
 }
