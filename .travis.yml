@@ -2,10 +2,10 @@ language: go
 
 os:
   - linux
-#  - osx
+  - osx
 
 go:
-  - "1.11.x"
+  - "1.12.x"
 
 env:
   - GO111MODULE=on
@@ -19,21 +19,21 @@ script:
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 
-before_deploy:
-  - make deploy
-
-deploy:
-  provider: releases
-  api_key: $GITHUB_OAUTH_TOKEN
-  file:
-    - out/rakkess-linux-amd64.gz
-    - out/rakkess-linux-amd64.gz.sha256
-    - out/rakkess-windows-amd64.gz
-    - out/rakkess-windows-amd64.gz.sha256
-    - out/rakkess-darwin-amd64.gz
-    - out/rakkess-darwin-amd64.gz.sha256
-    - out/bundle.tar.gz
-    - out/bundle.tar.gz.sha256
-  skip_cleanup: true
-  on:
-    tags: true
+#before_deploy:
+#  - make deploy
+#
+#deploy:
+#  provider: releases
+#  api_key: $GITHUB_OAUTH_TOKEN
+#  file:
+#    - out/rakkess-linux-amd64.gz
+#    - out/rakkess-linux-amd64.gz.sha256
+#    - out/rakkess-windows-amd64.gz
+#    - out/rakkess-windows-amd64.gz.sha256
+#    - out/rakkess-darwin-amd64.gz
+#    - out/rakkess-darwin-amd64.gz.sha256
+#    - out/bundle.tar.gz
+#    - out/bundle.tar.gz.sha256
+#  skip_cleanup: true
+#  on:
+#    tags: true
