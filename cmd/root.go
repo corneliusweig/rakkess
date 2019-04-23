@@ -76,7 +76,7 @@ var rootCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		catchCtrlC(cancel)
 
-		if err := rakkess.RakkessResource(ctx, rakkessOptions); err != nil {
+		if err := rakkess.Resource(ctx, rakkessOptions); err != nil {
 			logrus.Error(err)
 		}
 	},

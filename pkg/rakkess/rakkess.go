@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func RakkessResource(ctx context.Context, opts *options.RakkessOptions) error {
+func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 	if err := validation.Options(opts); err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func RakkessResource(ctx context.Context, opts *options.RakkessOptions) error {
 	return nil
 }
 
-func RakkessSubject(opts *options.RakkessOptions, resource string) error {
+func Subject(opts *options.RakkessOptions, resource string) error {
 	if err := validation.Options(opts); err != nil {
 		return err
 	}

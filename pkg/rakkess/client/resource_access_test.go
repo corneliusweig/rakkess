@@ -33,6 +33,13 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 )
 
+const (
+	roleNamespace       = "some-ns"
+	subjectKind         = "User"
+	testClusterRoleName = "some-clusterrole"
+	testRoleName        = "some-role"
+)
+
 func TestGetSubjectAccess(t *testing.T) {
 	tests := []struct {
 		name                string
@@ -46,82 +53,82 @@ func TestGetSubjectAccess(t *testing.T) {
 	}{
 		{
 			name:                "cluster-role and role matches",
-			namespace:           "some-ns",
+			namespace:           roleNamespace,
 			resource:            "deployments",
-			clusterRoles:        clusterRoles("clusterrole-1", "deployments", "create"),
-			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
-			roles:               roles("role-1", "some-ns", "deployments", "list"),
-			roleBindings:        roleBindings("role-1", "Role", "test-user"),
+			clusterRoles:        clusterRoles("deployments", "create"),
+			clusterRoleBindings: clusterRoleBindings("test-user"),
+			roles:               roles("deployments", "list"),
+			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
 			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: "User"}: sets.NewString("create", "list"),
+				{Name: "test-user", Kind: subjectKind}: sets.NewString("create", "list"),
 			},
 		},
 		{
 			name:                "cluster-role and role matches, multiple subjects",
-			namespace:           "some-ns",
+			namespace:           roleNamespace,
 			resource:            "deployments",
-			clusterRoles:        clusterRoles("clusterrole-1", "deployments", "create"),
-			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "user1", "user2"),
-			roles:               roles("role-1", "some-ns", "deployments", "list"),
-			roleBindings:        roleBindings("role-1", "Role", "user2", "user3"),
+			clusterRoles:        clusterRoles("deployments", "create"),
+			clusterRoleBindings: clusterRoleBindings("user1", "user2"),
+			roles:               roles("deployments", "list"),
+			roleBindings:        roleBindings(testRoleName, roleName, "user2", "user3"),
 			expected: map[result.SubjectRef]sets.String{
-				{Name: "user1", Kind: "User"}: sets.NewString("create"),
-				{Name: "user2", Kind: "User"}: sets.NewString("create", "list"),
-				{Name: "user3", Kind: "User"}: sets.NewString("list"),
+				{Name: "user1", Kind: subjectKind}: sets.NewString("create"),
+				{Name: "user2", Kind: subjectKind}: sets.NewString("create", "list"),
+				{Name: "user3", Kind: subjectKind}: sets.NewString("list"),
 			},
 		},
 		{
 			name:                "cluster-role and role matches, global scope",
 			namespace:           "", // empty namespace means global scope
 			resource:            "deployments",
-			clusterRoles:        clusterRoles("clusterrole-1", "deployments", "create"),
-			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
-			roles:               roles("role-1", "some-ns", "deployments", "list"),
-			roleBindings:        roleBindings("role-1", "Role", "test-user"),
+			clusterRoles:        clusterRoles("deployments", "create"),
+			clusterRoleBindings: clusterRoleBindings("test-user"),
+			roles:               roles("deployments", "list"),
+			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
 			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: "User"}: sets.NewString("create"),
+				{Name: "test-user", Kind: subjectKind}: sets.NewString("create"),
 			},
 		},
 		{
 			name:         "rolebinding to clusterrole",
-			namespace:    "some-ns",
+			namespace:    roleNamespace,
 			resource:     "deployments",
-			clusterRoles: clusterRoles("clusterrole-1", "deployments", "create"),
-			roleBindings: roleBindings("clusterrole-1", "ClusterRole", "test-user"),
+			clusterRoles: clusterRoles("deployments", "create"),
+			roleBindings: roleBindings(testClusterRoleName, clusterRoleName, "test-user"),
 			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: "User"}: sets.NewString("create"),
+				{Name: "test-user", Kind: subjectKind}: sets.NewString("create"),
 			},
 		},
 		{
 			name:                "bindings for wrong resource",
-			namespace:           "some-ns",
+			namespace:           roleNamespace,
 			resource:            "deployments",
-			clusterRoles:        clusterRoles("clusterrole-1", "configmaps", "create"),
-			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
-			roles:               roles("role-1", "some-ns", "configmaps", "list"),
-			roleBindings:        roleBindings("role-1", "Role", "test-user"),
+			clusterRoles:        clusterRoles("configmaps", "create"),
+			clusterRoleBindings: clusterRoleBindings("test-user"),
+			roles:               roles("configmaps", "list"),
+			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
 			expected:            map[result.SubjectRef]sets.String{},
 		},
 		{
 			name:                "VerbAll role binding",
-			namespace:           "some-ns",
+			namespace:           roleNamespace,
 			resource:            "configmaps",
-			clusterRoles:        clusterRoles("clusterrole-1", "configmaps", "create"),
-			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
-			roles:               roles("role-1", "some-ns", "configmaps", v1.VerbAll),
-			roleBindings:        roleBindings("role-1", "Role", "test-user"),
+			clusterRoles:        clusterRoles("configmaps", "create"),
+			clusterRoleBindings: clusterRoleBindings("test-user"),
+			roles:               roles("configmaps", v1.VerbAll),
+			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
 			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: "User"}: sets.NewString(constants.ValidVerbs...),
+				{Name: "test-user", Kind: subjectKind}: sets.NewString(constants.ValidVerbs...),
 			},
 		},
 		{
 			name:                "VerbAll clusterrole binding",
-			namespace:           "some-ns",
+			namespace:           roleNamespace,
 			resource:            "configmaps",
-			clusterRoles:        clusterRoles("clusterrole-1", "configmaps", v1.VerbAll),
-			clusterRoleBindings: clusterRoleBindings("clusterrole-1", "test-user"),
+			clusterRoles:        clusterRoles("configmaps", v1.VerbAll),
+			clusterRoleBindings: clusterRoleBindings("test-user"),
 			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: "User"}: sets.NewString(constants.ValidVerbs...),
+				{Name: "test-user", Kind: subjectKind}: sets.NewString(constants.ValidVerbs...),
 			},
 		},
 	}
@@ -165,11 +172,11 @@ func TestGetSubjectAccess(t *testing.T) {
 	}
 }
 
-func clusterRoles(name, resource string, verbs ...string) []v1.ClusterRole {
+func clusterRoles(resource string, verbs ...string) []v1.ClusterRole {
 	return []v1.ClusterRole{
 		{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
+				Name: testClusterRoleName,
 			},
 			Rules: []v1.PolicyRule{
 				{
@@ -181,11 +188,11 @@ func clusterRoles(name, resource string, verbs ...string) []v1.ClusterRole {
 	}
 }
 
-func clusterRoleBindings(clusterRole string, subjects ...string) []v1.ClusterRoleBinding {
+func clusterRoleBindings(subjects ...string) []v1.ClusterRoleBinding {
 	ss := make([]v1.Subject, 0, len(subjects))
 	for _, s := range subjects {
 		ss = append(ss, v1.Subject{
-			Kind: "User",
+			Kind: subjectKind,
 			Name: s,
 		})
 	}
@@ -193,19 +200,19 @@ func clusterRoleBindings(clusterRole string, subjects ...string) []v1.ClusterRol
 		{
 			Subjects: ss,
 			RoleRef: v1.RoleRef{
-				Name: clusterRole,
-				Kind: "ClusterRole",
+				Name: testClusterRoleName,
+				Kind: clusterRoleName,
 			},
 		},
 	}
 }
 
-func roles(name, namespace, resource string, verbs ...string) []v1.Role {
+func roles(resource string, verbs ...string) []v1.Role {
 	return []v1.Role{
 		{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: namespace,
+				Name:      testRoleName,
+				Namespace: roleNamespace,
 			},
 			Rules: []v1.PolicyRule{
 				{
@@ -221,7 +228,7 @@ func roleBindings(role, kind string, subjects ...string) []v1.RoleBinding {
 	ss := make([]v1.Subject, 0, len(subjects))
 	for _, s := range subjects {
 		ss = append(ss, v1.Subject{
-			Kind: "User",
+			Kind: subjectKind,
 			Name: s,
 		})
 	}

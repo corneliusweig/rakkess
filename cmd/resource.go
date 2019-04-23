@@ -60,7 +60,7 @@ var resourceCmd = &cobra.Command{
 	Long:    rakkessSubjectLong,
 	Example: rakkessSubjectExamples,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := rakkess.RakkessSubject(rakkessOptions, args[0]); err != nil {
+		if err := rakkess.Subject(rakkessOptions, args[0]); err != nil {
 			logrus.Error(err)
 		}
 	},

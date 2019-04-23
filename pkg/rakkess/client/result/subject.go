@@ -97,7 +97,7 @@ func expandVerbs(verbs []string) []string {
 	return verbs
 }
 
-func (ra *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVerbs []string) {
+func (sa *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVerbs []string) {
 	// table header
 	fmt.Fprint(w, "NAME\tKIND\tSA-NAMESPACE")
 	for _, v := range requestedVerbs {
@@ -105,15 +105,15 @@ func (ra *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVe
 	}
 	fmt.Fprint(w, "\n")
 
-	subjects := make([]SubjectRef, 0, len(ra.subjectAccess))
-	for s, _ := range ra.subjectAccess {
+	subjects := make([]SubjectRef, 0, len(sa.subjectAccess))
+	for s := range sa.subjectAccess {
 		subjects = append(subjects, s)
 	}
 	sort.Stable(sortableSubjects(subjects))
 
 	// table body
 	for _, subject := range subjects {
-		verbs := ra.subjectAccess[subject]
+		verbs := sa.subjectAccess[subject]
 		if !verbs.HasAny(requestedVerbs...) {
 			continue
 		}
