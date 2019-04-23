@@ -27,9 +27,9 @@ import (
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
-// todo(corneliusweig) error is always nil
+//  todo(corneliusweig) error is always nil
 func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (result.MatrixPrinter, error) {
-	var results []result.ResourceAccessItem
+	results := make([]result.ResourceAccessItem, 0, len(grs))
 	group := sync.WaitGroup{}
 	semaphore := make(chan struct{}, 20)
 	resultsChan := make(chan result.ResourceAccessItem)

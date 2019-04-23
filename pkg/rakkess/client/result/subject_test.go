@@ -240,7 +240,7 @@ func TestSortableSubjects(t *testing.T) {
 }
 
 func makeSubjects(in []string) []v1.Subject {
-	var subjects []v1.Subject
+	subjects := make([]v1.Subject, 0, len(in))
 	for _, s := range in {
 		subjects = append(subjects, v1.Subject{
 			Name:      s,

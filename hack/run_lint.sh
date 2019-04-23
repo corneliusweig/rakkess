@@ -32,10 +32,14 @@ fi
 		-E goimports \
 		-E golint \
 		-E gosec \
+		-E gosimple \
 		-E interfacer \
 		-E maligned \
 		-E misspell \
 		-E unconvert \
 		-E unparam \
 		-E stylecheck \
+		-E staticcheck \
+		-E structcheck \
+		-E prealloc \
 		--skip-dirs hack
