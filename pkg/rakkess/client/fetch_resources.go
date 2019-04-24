@@ -40,6 +40,7 @@ func (g GroupResource) fullName() string {
 	return fmt.Sprintf("%s.%s", g.APIResource.Name, g.APIGroup)
 }
 
+// FetchAvailableGroupResources fetches a list of known APIResources on the server.
 func FetchAvailableGroupResources(opts *options.RakkessOptions) ([]GroupResource, error) {
 	client, err := opts.DiscoveryClient()
 	if err != nil {

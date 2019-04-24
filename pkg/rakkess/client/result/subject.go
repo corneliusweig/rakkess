@@ -38,12 +38,17 @@ type SubjectRef struct {
 	Name, Kind, Namespace string
 }
 
+// SubjectAccess holds the access information of all subjects for the given resource.
 type SubjectAccess struct {
-	Resource      string
-	roles         map[RoleRef]sets.String
+	// Resource is the kubernetes resource that this instance applies to.
+	Resource string
+	// roles holds all rule data concerning this resource and is extracted from Roles and ClusterRoles.
+	roles map[RoleRef]sets.String
+	// roles holds all subject access data for this resource and is extracted from RoleBindings and ClusterRoleBindings.
 	subjectAccess map[SubjectRef]sets.String
 }
 
+// NewSubjectAccess creates a new SubjectAccess with initialized fields.
 func NewSubjectAccess(resource string) *SubjectAccess {
 	return &SubjectAccess{
 		Resource:      resource,
@@ -52,10 +57,19 @@ func NewSubjectAccess(resource string) *SubjectAccess {
 	}
 }
 
+// Get provides access to the actual result (for testing).
 func (sa *SubjectAccess) Get() map[SubjectRef]sets.String {
 	return sa.subjectAccess
 }
 
+// Empty checks if any subjects with access were found.
+func (sa *SubjectAccess) Empty() bool {
+	return len(sa.subjectAccess) == 0
+}
+
+// ResolveRoleRef takes a RoleRef and a list of subjects and stores the access
+// rights of the given role for each subject. The RoleRef and subjects usually
+// come from a (Cluster)RoleBinding.
 func (sa *SubjectAccess) ResolveRoleRef(r RoleRef, subjects []v1.Subject) {
 	verbsForRole, ok := sa.roles[r]
 	if !ok {
@@ -75,6 +89,9 @@ func (sa *SubjectAccess) ResolveRoleRef(r RoleRef, subjects []v1.Subject) {
 	}
 }
 
+// MatchRules takes a RoleRef and a PolicyRule and adds the rule verbs to the
+// allowed verbs for the RoleRef, if the sa.resource matches the rule.
+// The RoleRef and rule usually come from a (Cluster)Role.
 func (sa *SubjectAccess) MatchRules(r RoleRef, rule v1.PolicyRule) {
 	for _, resource := range rule.Resources {
 		if resource == v1.ResourceAll || resource == sa.Resource {
@@ -97,6 +114,7 @@ func expandVerbs(verbs []string) []string {
 	return verbs
 }
 
+// Print implements MatrixPrinter.Print. It prints a tab-separated table with a header.
 func (sa *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVerbs []string) {
 	// table header
 	fmt.Fprint(w, "NAME\tKIND\tSA-NAMESPACE")

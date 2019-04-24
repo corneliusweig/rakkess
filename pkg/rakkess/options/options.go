@@ -24,6 +24,7 @@ import (
 	v1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
+// RakkessOptions holds all user configuration options.
 type RakkessOptions struct {
 	ConfigFlags  *genericclioptions.ConfigFlags
 	Verbs        []string
@@ -31,6 +32,7 @@ type RakkessOptions struct {
 	Streams      *genericclioptions.IOStreams
 }
 
+// NewRakkessOptions creates RakkessOptions with defaults.
 func NewRakkessOptions() *RakkessOptions {
 	return &RakkessOptions{
 		ConfigFlags: genericclioptions.NewConfigFlags(true),
@@ -42,6 +44,7 @@ func NewRakkessOptions() *RakkessOptions {
 	}
 }
 
+// GetAuthClient creates a client for SelfSubjectAccessReviews with high queries per second.
 func (o *RakkessOptions) GetAuthClient() (v1.SelfSubjectAccessReviewInterface, error) {
 	restConfig, err := o.ConfigFlags.ToRESTConfig()
 	if err != nil {
@@ -55,6 +58,7 @@ func (o *RakkessOptions) GetAuthClient() (v1.SelfSubjectAccessReviewInterface, e
 	return authClient.SelfSubjectAccessReviews(), nil
 }
 
+// DiscoveryClient creates a kubernetes discovery client.
 func (o *RakkessOptions) DiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
 	return o.ConfigFlags.ToDiscoveryClient()
 }

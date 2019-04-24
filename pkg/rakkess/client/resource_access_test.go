@@ -157,7 +157,7 @@ func TestGetSubjectAccess(t *testing.T) {
 			getRbacClient = func(*options.RakkessOptions) (clientv1.RbacV1Interface, error) {
 				return fakeRbacClient, nil
 			}
-			defer func() { getRbacClient = GetRbacClient }()
+			defer func() { getRbacClient = getRbacClientImpl }()
 
 			opts := &options.RakkessOptions{
 				ConfigFlags: &genericclioptions.ConfigFlags{

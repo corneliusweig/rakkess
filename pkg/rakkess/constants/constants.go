@@ -19,10 +19,12 @@ package constants
 import "github.com/sirupsen/logrus"
 
 const (
+	// DefaultLogLevel is set to warn by default.
 	DefaultLogLevel = logrus.WarnLevel
 )
 
 var (
+	// ValidVerbs is the list of allowed actions on kubernetes resources.
 	ValidVerbs = []string{
 		"create",
 		"delete",
@@ -33,6 +35,8 @@ var (
 		"update",
 		"watch",
 	}
+
+	// ValidOutputFormats is the list of valid formats for the result table.
 	ValidOutputFormats = []string{
 		"icon-table",
 		"ascii-table",

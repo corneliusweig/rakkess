@@ -136,12 +136,11 @@ func TestPrintResults(t *testing.T) {
 	}
 
 	for _, test := range tests[0:4] {
-		isTerminal := IsTerminal
-		IsTerminal = func(w io.Writer) bool {
+		isTerminal = func(w io.Writer) bool {
 			return true
 		}
 		defer func() {
-			IsTerminal = isTerminal
+			isTerminal = isTerminalImpl
 		}()
 
 		t.Run(test.name, func(t *testing.T) {

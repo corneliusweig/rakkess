@@ -97,13 +97,11 @@ func init() {
 	AddRakkessFlags(rootCmd)
 
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if err := SetUpLogs(rakkessOptions.Streams.ErrOut, v); err != nil {
-			return err
-		}
-		return nil
+		return SetUpLogs(rakkessOptions.Streams.ErrOut, v)
 	}
 }
 
+// AddRakkessFlags sets up common flags for subcommands.
 func AddRakkessFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSliceVar(&rakkessOptions.Verbs, "verbs", []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of %s", constants.ValidVerbs))
 	cmd.Flags().StringVarP(&rakkessOptions.OutputFormat, "output", "o", "icon-table", fmt.Sprintf("output format out of %s", constants.ValidOutputFormats))
@@ -111,6 +109,7 @@ func AddRakkessFlags(cmd *cobra.Command) {
 	rakkessOptions.ConfigFlags.AddFlags(cmd.Flags())
 }
 
+// SetUpLogs configures the loglevel and output writer for logs.
 func SetUpLogs(out io.Writer, level string) error {
 	logrus.SetOutput(out)
 	lvl, err := logrus.ParseLevel(level)
