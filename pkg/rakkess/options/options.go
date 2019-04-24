@@ -17,6 +17,7 @@ limitations under the License.
 package options
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
@@ -27,10 +28,11 @@ import (
 
 // RakkessOptions holds all user configuration options.
 type RakkessOptions struct {
-	ConfigFlags  *genericclioptions.ConfigFlags
-	Verbs        []string
-	OutputFormat string
-	Streams      *genericclioptions.IOStreams
+	ConfigFlags      *genericclioptions.ConfigFlags
+	Verbs            []string
+	AsServiceAccount string
+	OutputFormat     string
+	Streams          *genericclioptions.IOStreams
 }
 
 // NewRakkessOptions creates RakkessOptions with defaults.
@@ -62,6 +64,27 @@ func (o *RakkessOptions) GetAuthClient() (v1.SelfSubjectAccessReviewInterface, e
 // DiscoveryClient creates a kubernetes discovery client.
 func (o *RakkessOptions) DiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
 	return o.ConfigFlags.ToDiscoveryClient()
+}
+
+func (o *RakkessOptions) ExpandServiceAccount() error {
+	if o.AsServiceAccount == "" {
+		return nil
+	}
+
+	var namespace string
+	if o.ConfigFlags.Namespace == nil || *o.ConfigFlags.Namespace == "" {
+		return fmt.Errorf("--%s also requires a namespace to be given (--namespace)", constants.FlagServiceAccount)
+	} else {
+		namespace = *o.ConfigFlags.Namespace
+	}
+
+	if o.ConfigFlags.Impersonate != nil && *o.ConfigFlags.Impersonate != "" {
+		return fmt.Errorf("--%s cannot be mixed with --as", constants.FlagServiceAccount)
+	}
+
+	impersonate := fmt.Sprintf("system:serviceaccount:%s:%s", namespace, o.AsServiceAccount)
+	o.ConfigFlags.Impersonate = &impersonate
+	return nil
 }
 
 // ExpandVerbs expands wildcard verbs `*` and `all`.

@@ -25,9 +25,10 @@ const (
 
 // Common or shared flags
 const (
-	FlagVerbs     = "verbs"
-	FlagOutput    = "output"
-	FlagVerbosity = "verbosity"
+	FlagVerbs          = "verbs"
+	FlagServiceAccount = "sa"
+	FlagOutput         = "output"
+	FlagVerbosity      = "verbosity"
 )
 
 var (
