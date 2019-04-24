@@ -39,7 +39,7 @@ func initTerminal(w io.Writer) {
 	}
 }
 
-func isTerminal(w io.Writer) bool {
+func isTerminalImpl(w io.Writer) bool {
 	if f, ok := w.(*os.File); ok {
 		var mode uint32
 		err := syscall.GetConsoleMode(syscall.Handle(f.Fd()), &mode)
