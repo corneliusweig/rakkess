@@ -10,14 +10,24 @@ kubectl access-matrix
 
 ## Options
 
-- `--verbs` show access for given verbs (valid verbs are `get`, `list`, `watch`, `create`, `update`, `delete`, `proxy`).
+- `--verbs` show access for given verbs (valid verbs are `create`, `get`, `list`, `watch`, `update`, `patch`, `delete`, and `deletecollection`).
+   It also accepts the shorthands `*` or `all` to enable all verbs.
 
 - `--namespace` show access rights for the given namespace. Also restricts the list to namespaced resources.
 
 - `--verbosity` set the log level (one of debug, info, warn, error, fatal, panic).
 
+- `--sa` like the `--as` option, but impersonate as a service-account. The service-account must either be qualified with its namespace (`--sa <namespace>:<sa-name>`) or be combined with the `--namespace` option.
+   The following is equivalent:
+   ```bash
+   kubectl access-matrix --sa <sa-name> -n <namespace>
+   kubectl access-matrix --sa <namespace>:<sa-name> -n <namespace>
+   ```
+
+   _Note_: this is a shorthand for `--as system:serviceaccount:<namespace>:<sa-name>`.
+
 ## Examples
-#### Show access for all resources
+#### Show access to all resources
 - ... at cluster scope
   ```bash
   kubectl access-matrix
@@ -37,6 +47,11 @@ kubectl access-matrix
 - ... for another user
   ```bash
   kubectl access-matrix --as other-user
+  ```
+
+- ... for another service-account
+  ```bash
+  kubectl access-matrix --sa kube-system:namespace-controller
   ```
 
 - ... and combine with common `kubectl` parameters

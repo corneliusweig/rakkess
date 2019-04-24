@@ -21,6 +21,7 @@ import (
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 func TestRakkessOptions_ExpandVerbs(t *testing.T) {
@@ -57,6 +58,65 @@ func TestRakkessOptions_ExpandVerbs(t *testing.T) {
 			opts.ExpandVerbs()
 
 			assert.Equal(t, test.expected, opts.Verbs)
+		})
+	}
+}
+
+func TestRakkessOptions_ExpandServiceAccount(t *testing.T) {
+	tests := []struct {
+		name           string
+		serviceAccount string
+		namespace      string
+		impersonate    string
+		expected       string
+		expectedErr    string
+	}{
+		{
+			name:        "no serviceAccount given",
+			impersonate: "original-impersonate",
+			expected:    "original-impersonate",
+		},
+		{
+			name:           "unqualified serviceAccount and namespace",
+			serviceAccount: "some-sa",
+			namespace:      "some-ns",
+			expected:       "system:serviceaccount:some-ns:some-sa",
+		},
+		{
+			name:           "qualified serviceAccount",
+			serviceAccount: "some-ns:some-sa",
+			expected:       "system:serviceaccount:some-ns:some-sa",
+		},
+		{
+			name:           "unqualified serviceAccount without namespace",
+			serviceAccount: "some-ns",
+			expectedErr:    "fully qualify the serviceAccount",
+		},
+		{
+			name:           "qualified serviceAccount and impersonate",
+			serviceAccount: "some-ns",
+			impersonate:    "other-impersonatino",
+			expectedErr:    "--sa cannot be mixed with --as",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			opts := &RakkessOptions{
+				ConfigFlags: &genericclioptions.ConfigFlags{
+					Impersonate: &test.impersonate,
+					Namespace:   &test.namespace,
+				},
+				AsServiceAccount: test.serviceAccount,
+			}
+
+			err := opts.ExpandServiceAccount()
+			if test.expectedErr != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), test.expectedErr)
+			} else {
+				assert.Equal(t, test.expected, *opts.ConfigFlags.Impersonate)
+			}
 		})
 	}
 }

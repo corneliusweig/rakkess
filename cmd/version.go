@@ -35,6 +35,7 @@ build date: {{.BuildDate}}
 go version: {{.GoVersion}}
 compiler:   {{.Compiler}}
 `
+	flagFull = "full"
 )
 
 var versionCmd = &cobra.Command{
@@ -47,13 +48,13 @@ var versionCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(versionCmd)
 
-	versionCmd.Flags().BoolP("full", "f", false, "print extended version information")
+	versionCmd.Flags().BoolP(flagFull, "f", false, "print extended version information")
 }
 
 func runVersion(cmd *cobra.Command, args []string) {
 	var tpl string
 
-	if cmd.Flag("full").Changed {
+	if cmd.Flag(flagFull).Changed {
 		tpl = fullInfoTemplate
 	} else {
 		tpl = versionTemplate
