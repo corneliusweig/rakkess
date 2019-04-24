@@ -43,11 +43,14 @@ More on https://github.com/corneliusweig/rakkess/blob/v0.3.0/doc/USAGE.md#usage
   Review access to deployments in any namespace
   $ rakkess resource deployments
 
-  Review access deployments in the default namespace (with shorthands)
+  Review access to deployments in the default namespace (with shorthands)
   $ rakkess r deploy --namespace default
 
-  Review access for deployments with custom verbs
+  Review access to deployments with custom verbs
   $ rakkess r deploy --verbs get,watch,deletecollection
+
+  Review access to a config-map with a specific name
+  $ rakkess r cm config-map-name --verbs=all
 `
 )
 

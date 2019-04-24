@@ -80,6 +80,15 @@ kubectl access-matrix
   kubectl access-matrix r cm --verbs get,delete,watch,patch
   ```
   
+##### Name-restricted roles
+Some roles only apply to resources with a specific name.
+To review such configurations, provide the resource name as additional argument.
+For example, consider `ConfigMaps` with name `ingress-controller-leader-nginx` in namespace `ingress-nginx`:
+
+```bash
+kubectl access-matrix r cm ingress-controller-leader-nginx -n ingress-nginx --verbs=all
+```
+  
 As `kubectl access-matrix resource` needs to query `Roles`, `ClusterRoles`, and their bindings, it usually requires administrative cluster access.
 
 ## Getting help

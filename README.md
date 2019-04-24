@@ -70,6 +70,15 @@ It lists access rights for the current user for all server resources.
   rakkess r cm --verbs get,delete,watch,patch
   ```
   
+##### Name-restricted roles
+Some roles only apply to resources with a specific name.
+To review such configurations, provide the resource name as additional argument.
+For example, consider `ConfigMaps` with name `ingress-controller-leader-nginx` in namespace `ingress-nginx`:
+
+```bash
+rakkess r cm ingress-controller-leader-nginx -n ingress-nginx --verbs=all
+```
+  
 As `rakkess resource` needs to query `Roles`, `ClusterRoles`, and their bindings, it usually requires administrative cluster access.
 
 Also see [Usage](doc/USAGE.md).
