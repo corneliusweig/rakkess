@@ -23,6 +23,13 @@ const (
 	DefaultLogLevel = logrus.WarnLevel
 )
 
+// Common or shared flags
+const (
+	FlagVerbs     = "verbs"
+	FlagOutput    = "output"
+	FlagVerbosity = "verbosity"
+)
+
 var (
 	// ValidVerbs is the list of allowed actions on kubernetes resources.
 	// Sort order aligned along CRUD.

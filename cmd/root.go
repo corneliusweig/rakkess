@@ -92,7 +92,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
+	rootCmd.PersistentFlags().StringVarP(&v, constants.FlagVerbosity, "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
 
 	AddRakkessFlags(rootCmd)
 
@@ -104,8 +104,8 @@ func init() {
 
 // AddRakkessFlags sets up common flags for subcommands.
 func AddRakkessFlags(cmd *cobra.Command) {
-	cmd.Flags().StringSliceVar(&rakkessOptions.Verbs, "verbs", []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of %s", constants.ValidVerbs))
-	cmd.Flags().StringVarP(&rakkessOptions.OutputFormat, "output", "o", "icon-table", fmt.Sprintf("output format out of %s", constants.ValidOutputFormats))
+	cmd.Flags().StringSliceVar(&rakkessOptions.Verbs, constants.FlagVerbs, []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of %s", constants.ValidVerbs))
+	cmd.Flags().StringVarP(&rakkessOptions.OutputFormat, constants.FlagOutput, "o", "icon-table", fmt.Sprintf("output format out of %s", constants.ValidOutputFormats))
 
 	rakkessOptions.ConfigFlags.AddFlags(cmd.Flags())
 }
