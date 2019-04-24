@@ -10,7 +10,8 @@ kubectl access-matrix
 
 ## Options
 
-- `--verbs` show access for given verbs (valid verbs are `get`, `list`, `watch`, `create`, `update`, `delete`, `proxy`).
+- `--verbs` show access for given verbs (valid verbs are `create`, `get`, `list`, `watch`, `update`, `patch`, `delete`, and `deletecollection`).
+   It also accepts the shorthands `*` or `all` to enable all verbs.
 
 - `--namespace` show access rights for the given namespace. Also restricts the list to namespaced resources.
 
