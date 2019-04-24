@@ -97,6 +97,7 @@ func init() {
 	AddRakkessFlags(rootCmd)
 
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		rakkessOptions.ExpandVerbs()
 		return SetUpLogs(rakkessOptions.Streams.ErrOut, v)
 	}
 }
