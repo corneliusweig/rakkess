@@ -170,7 +170,7 @@ func TestSubjectAccess_Print(t *testing.T) {
 		{
 			name: "single row with multiple verbs",
 			subjectAccess: map[SubjectRef]sets.String{
-				SubjectRef{Name: "default", Kind: "service-account", Namespace: "some-ns"}: sets.NewString("list", "delete"),
+				{Name: "default", Kind: "service-account", Namespace: "some-ns"}: sets.NewString("list", "delete"),
 			},
 			verbs:    []string{"list", "get"},
 			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\ndefault\tservice-account\tsome-ns\tyes\tno\n",
@@ -178,9 +178,9 @@ func TestSubjectAccess_Print(t *testing.T) {
 		{
 			name: "multiple rows with multiple verbs",
 			subjectAccess: map[SubjectRef]sets.String{
-				SubjectRef{Name: "c-default", Kind: "SA-c", Namespace: "ns-c"}: sets.NewString("get", "delete"),
-				SubjectRef{Name: "b-default", Kind: "SA-b", Namespace: "ns-b"}: sets.NewString("list", "get"),
-				SubjectRef{Name: "a-default", Kind: "SA-a", Namespace: "ns-a"}: sets.NewString("list", "delete"),
+				{Name: "c-default", Kind: "SA-c", Namespace: "ns-c"}: sets.NewString("get", "delete"),
+				{Name: "b-default", Kind: "SA-b", Namespace: "ns-b"}: sets.NewString("list", "get"),
+				{Name: "a-default", Kind: "SA-a", Namespace: "ns-a"}: sets.NewString("list", "delete"),
 			},
 			verbs:    []string{"list", "get"},
 			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\na-default\tSA-a\tns-a\tyes\tno\nb-default\tSA-b\tns-b\tyes\tyes\nc-default\tSA-c\tns-c\tno\tyes\n",
@@ -188,9 +188,9 @@ func TestSubjectAccess_Print(t *testing.T) {
 		{
 			name: "ignore row without matches",
 			subjectAccess: map[SubjectRef]sets.String{
-				SubjectRef{Name: "c-default", Kind: "SA-c", Namespace: "ns-c"}: sets.NewString("get", "delete"),
-				SubjectRef{Name: "b-default", Kind: "SA-b", Namespace: "ns-b"}: sets.NewString("delete", "update"),
-				SubjectRef{Name: "a-default", Kind: "SA-a", Namespace: "ns-a"}: sets.NewString("list", "delete"),
+				{Name: "c-default", Kind: "SA-c", Namespace: "ns-c"}: sets.NewString("get", "delete"),
+				{Name: "b-default", Kind: "SA-b", Namespace: "ns-b"}: sets.NewString("delete", "update"),
+				{Name: "a-default", Kind: "SA-a", Namespace: "ns-a"}: sets.NewString("list", "delete"),
 			},
 			verbs:    []string{"list", "get"},
 			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\na-default\tSA-a\tns-a\tyes\tno\nc-default\tSA-c\tns-c\tno\tyes\n",
