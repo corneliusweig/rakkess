@@ -19,6 +19,7 @@ package options
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -71,20 +72,30 @@ func (o *RakkessOptions) ExpandServiceAccount() error {
 		return nil
 	}
 
-	var namespace string
-	if o.ConfigFlags.Namespace == nil || *o.ConfigFlags.Namespace == "" {
-		return fmt.Errorf("--%s also requires a namespace to be given (--namespace)", constants.FlagServiceAccount)
-	} else {
-		namespace = *o.ConfigFlags.Namespace
-	}
-
 	if o.ConfigFlags.Impersonate != nil && *o.ConfigFlags.Impersonate != "" {
 		return fmt.Errorf("--%s cannot be mixed with --as", constants.FlagServiceAccount)
 	}
 
-	impersonate := fmt.Sprintf("system:serviceaccount:%s:%s", namespace, o.AsServiceAccount)
+	qualifiedServiceAccount, err := o.namespacedServiceAccount()
+	if err != nil {
+		return err
+	}
+
+	impersonate := fmt.Sprintf("system:serviceaccount:%s", qualifiedServiceAccount)
 	o.ConfigFlags.Impersonate = &impersonate
 	return nil
+}
+
+func (o *RakkessOptions) namespacedServiceAccount() (string, error) {
+	if strings.Contains(o.AsServiceAccount, ":") {
+		return o.AsServiceAccount, nil
+	}
+
+	if o.ConfigFlags.Namespace != nil && *o.ConfigFlags.Namespace != "" {
+		return fmt.Sprintf("%s:%s", *o.ConfigFlags.Namespace, o.AsServiceAccount), nil
+	}
+
+	return "", fmt.Errorf("serviceAccounts are namespaced, either provide --namespace or fully qualify the serviceAccount: '<namespace>:%s'", o.AsServiceAccount)
 }
 
 // ExpandVerbs expands wildcard verbs `*` and `all`.

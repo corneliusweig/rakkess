@@ -95,7 +95,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&v, constants.FlagVerbosity, "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
 
 	AddRakkessFlags(rootCmd)
-	rootCmd.Flags().StringVar(&rakkessOptions.AsServiceAccount, constants.FlagServiceAccount, "", "similar to --as, but impersonate as service-account (also requires the -n option)")
+	rootCmd.Flags().StringVar(&rakkessOptions.AsServiceAccount, constants.FlagServiceAccount, "", "similar to --as, but impersonate as service-account. The argument must be qualified <namespace>:<sa-name> or be combined with the --namespace option.")
 
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		rakkessOptions.ExpandVerbs()
