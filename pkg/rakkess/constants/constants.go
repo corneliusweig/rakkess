@@ -25,15 +25,16 @@ const (
 
 var (
 	// ValidVerbs is the list of allowed actions on kubernetes resources.
+	// Sort order aligned along CRUD.
 	ValidVerbs = []string{
 		"create",
-		"delete",
-		"deletecollection",
 		"get",
 		"list",
-		"patch",
-		"update",
 		"watch",
+		"update",
+		"patch",
+		"delete",
+		"deletecollection",
 	}
 
 	// ValidOutputFormats is the list of valid formats for the result table.
