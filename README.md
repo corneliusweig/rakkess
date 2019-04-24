@@ -38,6 +38,11 @@ It lists access rights for the current user for all server resources.
   rakkess --as other-user
   ```
 
+- ... for another service-account
+  ```bash
+  rakkess --sa kube-system:namespace-controller
+  ```
+
 - ... and combine with common `kubectl` parameters
   ```bash
   KUBECONFIG=otherconfig rakkess --context other-context

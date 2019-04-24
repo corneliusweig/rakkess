@@ -60,6 +60,9 @@ More on https://github.com/corneliusweig/rakkess/blob/v0.2.1/doc/USAGE.md#usage
   Review access as a different user
   $ rakkess --as other-user
 
+  Review access as a service-account
+  $ rakkess --sa kube-system:namespace-controller
+
   Review access for different verbs
   $ rakkess --verbs get,watch,patch
 `
