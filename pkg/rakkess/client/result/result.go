@@ -18,6 +18,7 @@ package result
 
 import "io"
 
+// This encodes the access of the given subject to the resource+verb combination.
 const (
 	AccessAllowed = iota
 	AccessDenied

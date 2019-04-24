@@ -29,6 +29,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+// Resource determines the access right of the current (or impersonated) user
+// and prints the result as a matrix with verbs in the horizontal and resource names
+// in the vertical direction.
 func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 	if err := validation.Options(opts); err != nil {
 		return err
@@ -60,6 +63,9 @@ func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 	return nil
 }
 
+// Subject determines the subjects with access right to the given resource and
+// prints the result as a matrix with verbs in the horizontal and subject names
+// in the vertical direction.
 func Subject(opts *options.RakkessOptions, resource string) error {
 	if err := validation.Options(opts); err != nil {
 		return err
@@ -79,7 +85,7 @@ func Subject(opts *options.RakkessOptions, resource string) error {
 		return errors.Wrap(err, "get subject access")
 	}
 
-	if len(subjectAccess.Get()) == 0 {
+	if subjectAccess.Empty() {
 		logrus.Warnf("No subjects with access found. This most likely means that you have insufficient rights to review authorization.")
 		return nil
 	}

@@ -23,14 +23,20 @@ import (
 	"strings"
 )
 
+// ResourceAccessItem holds the access result for a resource.
 type ResourceAccessItem struct {
-	Name   string
+	// Name is the resource name.
+	Name string
+	// Access maps from verb to access code.
 	Access map[string]int
-	Err    []error
+	// Err holds access error if a SelfSubjectAccessReview failed.
+	Err []error
 }
 
+// ResourceAccess holds the access result for all resources.
 type ResourceAccess []ResourceAccessItem
 
+// NewResourceAccess creates a fresh ResourceAccess and sorts the results by resource name.
 func NewResourceAccess(items []ResourceAccessItem) ResourceAccess {
 	ra := ResourceAccess(items)
 	sort.Stable(ra)
@@ -49,6 +55,7 @@ func (ra ResourceAccess) Less(i, j int) bool {
 	return true
 }
 
+// Print implements MatrixPrinter.Print. It prints a tab-separated table with a header.
 func (ra ResourceAccess) Print(w io.Writer, converter CodeConverter, requestedVerbs []string) {
 	// table header
 	fmt.Fprint(w, "NAME")

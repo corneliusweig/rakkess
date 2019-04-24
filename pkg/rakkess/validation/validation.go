@@ -8,6 +8,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
+// Options validates RakkessOptions. Fields validated:
+// - OutputFormat
+// - Verbs
 func Options(opts *options.RakkessOptions) error {
 	if err := verbs(opts.Verbs); err != nil {
 		return err

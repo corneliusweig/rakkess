@@ -27,6 +27,7 @@ import (
 var version, gitCommit, buildDate string
 var platform = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 
+// BuildInfo stores static build information about the binary.
 type BuildInfo struct {
 	BuildDate string
 	Compiler  string
@@ -49,6 +50,7 @@ func GetBuildInfo() *BuildInfo {
 	}
 }
 
+// ParseVersion parses a version string ignoring a leading `v`. For example: v1.2.3
 func ParseVersion(version string) (semver.Version, error) {
 	version = strings.TrimLeft(strings.TrimSpace(version), "v")
 	return semver.Parse(version)

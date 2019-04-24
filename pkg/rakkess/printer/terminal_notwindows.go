@@ -34,7 +34,7 @@ import (
 func initTerminal(_ io.Writer) {
 }
 
-func isTerminal(w io.Writer) bool {
+func isTerminalImpl(w io.Writer) bool {
 	if f, ok := w.(*os.File); ok {
 		return terminal.IsTerminal(int(f.Fd()))
 	}

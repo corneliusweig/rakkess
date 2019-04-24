@@ -26,7 +26,7 @@ import (
 
 var (
 	// for testing
-	getRbacClient = GetRbacClient
+	getRbacClient = getRbacClientImpl
 )
 
 const (
@@ -34,6 +34,7 @@ const (
 	roleName        = "Role"
 )
 
+// GetSubjectAccess determines subjects with access to the given resource.
 func GetSubjectAccess(opts *options.RakkessOptions, resource string) (*result.SubjectAccess, error) {
 	rbacClient, err := getRbacClient(opts)
 	if err != nil {
@@ -142,7 +143,7 @@ func fetchMatchingRoles(rbacClient clientv1.RolesGetter, sa *result.SubjectAcces
 	return nil
 }
 
-func GetRbacClient(o *options.RakkessOptions) (clientv1.RbacV1Interface, error) {
+func getRbacClientImpl(o *options.RakkessOptions) (clientv1.RbacV1Interface, error) {
 	restConfig, err := o.ConfigFlags.ToRESTConfig()
 	if err != nil {
 		return nil, err

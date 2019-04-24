@@ -34,10 +34,11 @@ const (
 )
 
 var (
-	IsTerminal = isTerminal
+	isTerminal = isTerminalImpl
 	terminit   sync.Once
 )
 
+// PrintResults configures the table style and delegates printing to result.MatrixPrinter.
 func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results result.MatrixPrinter) {
 	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
 	defer w.Flush()
@@ -45,7 +46,7 @@ func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, r
 	terminit.Do(func() { initTerminal(out) })
 
 	codeConverter := humanreadableAccessCode
-	if IsTerminal(out) {
+	if isTerminal(out) {
 		codeConverter = colorHumanreadableAccessCode
 	}
 	if outputFormat == "ascii-table" {
