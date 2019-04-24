@@ -40,8 +40,10 @@ type SubjectRef struct {
 
 // SubjectAccess holds the access information of all subjects for the given resource.
 type SubjectAccess struct {
-	// Resource is the kubernetes resource that this instance applies to.
+	// Resource is the kubernetes resource of this query.
 	Resource string
+	// ResourceName is the name of the kubernetes resource instance of this query.
+	ResourceName string
 	// roles holds all rule data concerning this resource and is extracted from Roles and ClusterRoles.
 	roles map[RoleRef]sets.String
 	// roles holds all subject access data for this resource and is extracted from RoleBindings and ClusterRoleBindings.
@@ -49,9 +51,10 @@ type SubjectAccess struct {
 }
 
 // NewSubjectAccess creates a new SubjectAccess with initialized fields.
-func NewSubjectAccess(resource string) *SubjectAccess {
+func NewSubjectAccess(resource, resourceName string) *SubjectAccess {
 	return &SubjectAccess{
 		Resource:      resource,
+		ResourceName:  resourceName,
 		roles:         make(map[RoleRef]sets.String),
 		subjectAccess: make(map[SubjectRef]sets.String),
 	}
@@ -93,6 +96,10 @@ func (sa *SubjectAccess) ResolveRoleRef(r RoleRef, subjects []v1.Subject) {
 // allowed verbs for the RoleRef, if the sa.resource matches the rule.
 // The RoleRef and rule usually come from a (Cluster)Role.
 func (sa *SubjectAccess) MatchRules(r RoleRef, rule v1.PolicyRule) {
+	if len(rule.ResourceNames) > 0 && !includes(rule.ResourceNames, sa.ResourceName) {
+		return
+	}
+
 	for _, resource := range rule.Resources {
 		if resource == v1.ResourceAll || resource == sa.Resource {
 			expandedVerbs := expandVerbs(rule.Verbs)
@@ -103,6 +110,18 @@ func (sa *SubjectAccess) MatchRules(r RoleRef, rule v1.PolicyRule) {
 			}
 		}
 	}
+}
+
+func includes(coll []string, x string) bool {
+	if x == "" {
+		return false
+	}
+	for _, s := range coll {
+		if s == x {
+			return true
+		}
+	}
+	return false
 }
 
 func expandVerbs(verbs []string) []string {

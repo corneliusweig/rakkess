@@ -66,7 +66,7 @@ func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 // Subject determines the subjects with access right to the given resource and
 // prints the result as a matrix with verbs in the horizontal and subject names
 // in the vertical direction.
-func Subject(opts *options.RakkessOptions, resource string) error {
+func Subject(opts *options.RakkessOptions, resource, resourceName string) error {
 	if err := validation.Options(opts); err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func Subject(opts *options.RakkessOptions, resource string) error {
 		return errors.Wrap(err, "determine requested resource")
 	}
 
-	subjectAccess, err := client.GetSubjectAccess(opts, versionedResource.Resource)
+	subjectAccess, err := client.GetSubjectAccess(opts, versionedResource.Resource, resourceName)
 	if err != nil {
 		return errors.Wrap(err, "get subject access")
 	}

@@ -43,24 +43,32 @@ More on https://github.com/corneliusweig/rakkess/blob/v0.3.0/doc/USAGE.md#usage
   Review access to deployments in any namespace
   $ rakkess resource deployments
 
-  Review access deployments in the default namespace (with shorthands)
+  Review access to deployments in the default namespace (with shorthands)
   $ rakkess r deploy --namespace default
 
-  Review access for deployments with custom verbs
+  Review access to deployments with custom verbs
   $ rakkess r deploy --verbs get,watch,deletecollection
+
+  Review access to a config-map with a specific name
+  $ rakkess r cm config-map-name --verbs=all
 `
 )
 
 // resourceCmd represents the resource command
 var resourceCmd = &cobra.Command{
 	Use:     "resource",
-	Aliases: []string{"r"},
+	Aliases: []string{"r", "for"},
 	Short:   "Show all subjects with access to a given resource",
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.RangeArgs(1, 2),
 	Long:    rakkessSubjectLong,
 	Example: rakkessSubjectExamples,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := rakkess.Subject(rakkessOptions, args[0]); err != nil {
+		resource := args[0]
+		var resourceName string
+		if len(args) == 2 {
+			resourceName = args[1]
+		}
+		if err := rakkess.Subject(rakkessOptions, resource, resourceName); err != nil {
 			logrus.Error(err)
 		}
 	},

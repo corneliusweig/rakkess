@@ -164,7 +164,7 @@ func TestGetSubjectAccess(t *testing.T) {
 					Namespace: &test.namespace,
 				},
 			}
-			sa, err := GetSubjectAccess(opts, test.resource)
+			sa, err := GetSubjectAccess(opts, test.resource, "")
 			assert.NoError(t, err)
 			assert.Equal(t, test.resource, sa.Resource)
 			assert.Equal(t, test.expected, sa.Get())

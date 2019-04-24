@@ -35,6 +35,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 	resource := "deployments"
 	tests := []struct {
 		name          string
+		resourceName  string
 		initialVerbs  []string
 		rule          v1.PolicyRule
 		expectedVerbs []string
@@ -79,11 +80,38 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 			},
 			expectedVerbs: constants.ValidVerbs,
 		},
+		{
+			name: "simple rule with resourceNames does not match",
+			rule: v1.PolicyRule{
+				Resources:     []string{resource},
+				ResourceNames: []string{"no-match"},
+				Verbs:         []string{"create", "get"},
+			},
+		},
+		{
+			name:         "simple rule with matching resourceName",
+			resourceName: "my-resource-name",
+			rule: v1.PolicyRule{
+				Resources:     []string{resource},
+				ResourceNames: []string{"my-resource-name"},
+				Verbs:         []string{"create", "get"},
+			},
+			expectedVerbs: []string{"create", "get"},
+		},
+		{
+			name:         "simple rule with wrong resourceName",
+			resourceName: "my-resource-name",
+			rule: v1.PolicyRule{
+				Resources:     []string{resource},
+				ResourceNames: []string{"wrong-resource-name"},
+				Verbs:         []string{"create", "get"},
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			sa := NewSubjectAccess(resource)
+			sa := NewSubjectAccess(resource, test.resourceName)
 			if test.initialVerbs != nil {
 				sa.roles[r] = sets.NewString(test.initialVerbs...)
 			}
