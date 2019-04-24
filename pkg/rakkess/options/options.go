@@ -19,6 +19,7 @@ package options
 import (
 	"os"
 
+	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/discovery"
 	v1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
@@ -61,4 +62,13 @@ func (o *RakkessOptions) GetAuthClient() (v1.SelfSubjectAccessReviewInterface, e
 // DiscoveryClient creates a kubernetes discovery client.
 func (o *RakkessOptions) DiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
 	return o.ConfigFlags.ToDiscoveryClient()
+}
+
+// ExpandVerbs expands wildcard verbs `*` and `all`.
+func (o *RakkessOptions) ExpandVerbs() {
+	for _, verb := range o.Verbs {
+		if verb == "*" || verb == "all" {
+			o.Verbs = constants.ValidVerbs
+		}
+	}
 }
