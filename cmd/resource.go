@@ -54,13 +54,18 @@ More on https://github.com/corneliusweig/rakkess/blob/v0.3.0/doc/USAGE.md#usage
 // resourceCmd represents the resource command
 var resourceCmd = &cobra.Command{
 	Use:     "resource",
-	Aliases: []string{"r"},
+	Aliases: []string{"r", "for"},
 	Short:   "Show all subjects with access to a given resource",
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.RangeArgs(1, 2),
 	Long:    rakkessSubjectLong,
 	Example: rakkessSubjectExamples,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := rakkess.Subject(rakkessOptions, args[0]); err != nil {
+		resource := args[0]
+		var resourceName string
+		if len(args) == 2 {
+			resourceName = args[1]
+		}
+		if err := rakkess.Subject(rakkessOptions, resource, resourceName); err != nil {
 			logrus.Error(err)
 		}
 	},

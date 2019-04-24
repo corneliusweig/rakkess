@@ -35,7 +35,7 @@ const (
 )
 
 // GetSubjectAccess determines subjects with access to the given resource.
-func GetSubjectAccess(opts *options.RakkessOptions, resource string) (*result.SubjectAccess, error) {
+func GetSubjectAccess(opts *options.RakkessOptions, resource, resourceName string) (*result.SubjectAccess, error) {
 	rbacClient, err := getRbacClient(opts)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func GetSubjectAccess(opts *options.RakkessOptions, resource string) (*result.Su
 	namespace := opts.ConfigFlags.Namespace
 	isNamespace := namespace != nil && *namespace != ""
 
-	sa := result.NewSubjectAccess(resource)
+	sa := result.NewSubjectAccess(resource, resourceName)
 
 	if err := fetchMatchingClusterRoles(rbacClient, sa); err != nil {
 		if !isNamespace {
