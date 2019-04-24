@@ -80,7 +80,7 @@ kubectl access-matrix
   kubectl access-matrix r cm --verbs get,delete,watch,patch
   ```
   
-As `rakkess resource` needs to query `Roles`, `ClusterRoles`, and their bindings, it usually requires administrative cluster access.
+As `kubectl access-matrix resource` needs to query `Roles`, `ClusterRoles`, and their bindings, it usually requires administrative cluster access.
 
 ## Getting help
 ```bash
