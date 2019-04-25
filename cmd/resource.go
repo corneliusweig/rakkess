@@ -56,7 +56,7 @@ More on https://github.com/corneliusweig/rakkess/blob/v0.3.0/doc/USAGE.md#usage
 
 // resourceCmd represents the resource command
 var resourceCmd = &cobra.Command{
-	Use:     "resource",
+	Use:     "resource <resource> [name]",
 	Aliases: []string{"r", "for"},
 	Short:   "Show all subjects with access to a given resource",
 	Args:    cobra.RangeArgs(1, 2),
