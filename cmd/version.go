@@ -17,11 +17,10 @@ limitations under the License.
 package cmd
 
 import (
-	"os"
 	"text/template"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/version"
-	"github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +41,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version information",
 	Args:  cobra.NoArgs,
-	Run:   runVersion,
+	RunE:  runVersion,
 }
 
 func init() {
@@ -51,7 +50,7 @@ func init() {
 	versionCmd.Flags().BoolP(flagFull, "f", false, "print extended version information")
 }
 
-func runVersion(cmd *cobra.Command, args []string) {
+func runVersion(cmd *cobra.Command, _ []string) error {
 	var tpl string
 
 	if cmd.Flag(flagFull).Changed {
@@ -62,7 +61,8 @@ func runVersion(cmd *cobra.Command, args []string) {
 
 	var t = template.Must(template.New("info").Parse(tpl))
 
-	if err := t.Execute(os.Stdout, version.GetBuildInfo()); err != nil {
-		logrus.Warn("Could not print version info")
+	if err := t.Execute(rakkessOptions.Streams.Out, version.GetBuildInfo()); err != nil {
+		return errors.Wrapf(err, "could not print version info")
 	}
+	return nil
 }

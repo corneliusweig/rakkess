@@ -17,10 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"os"
+
 	"github.com/corneliusweig/rakkess/cmd"
+	"github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func main() {
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		logrus.Error(err)
+		os.Exit(1)
+	}
 }

@@ -40,7 +40,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -228,12 +227,13 @@ var completionCmd = &cobra.Command{
 		return cobra.OnlyValidArgs(cmd, args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		out := rakkessOptions.Streams.Out
 		var err error
 		switch args[0] {
 		case "bash":
-			err = rootCmd.GenBashCompletion(os.Stdout)
+			err = rootCmd.GenBashCompletion(out)
 		case "zsh":
-			err = runCompletionZsh(os.Stdout)
+			err = runCompletionZsh(out)
 		}
 		if err != nil {
 			logrus.Fatal(err)

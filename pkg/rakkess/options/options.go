@@ -17,11 +17,13 @@ limitations under the License.
 package options
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
+	"github.com/sirupsen/logrus"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/discovery"
 	v1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
@@ -46,6 +48,16 @@ func NewRakkessOptions() *RakkessOptions {
 			ErrOut: os.Stderr,
 		},
 	}
+}
+
+// Sets up options with in-memory buffers as in- and output-streams
+func NewTestRakkessOptions() (*RakkessOptions, *bytes.Buffer, *bytes.Buffer, *bytes.Buffer) {
+	iostreams, in, out, errout := genericclioptions.NewTestIOStreams()
+	logrus.SetOutput(errout)
+	return &RakkessOptions{
+		ConfigFlags: genericclioptions.NewConfigFlags(true),
+		Streams:     &iostreams,
+	}, in, out, errout
 }
 
 // GetAuthClient creates a client for SelfSubjectAccessReviews with high queries per second.
