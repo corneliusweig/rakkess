@@ -17,137 +17,118 @@ limitations under the License.
 package client
 
 import (
+	"context"
+	"sync"
+
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
 	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
+	v1 "k8s.io/api/authorization/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
+	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
-var (
-	// for testing
-	getRbacClient = getRbacClientImpl
-)
+// CheckResourceAccess determines the access rights for the given GroupResources and verbs.
+// Since it needs to do a lot of requests, the SelfSubjectAccessReviewInterface needs to
+// be configured for high queries per second.
+func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (result.MatrixPrinter, error) {
+	results := make([]result.ResourceAccessItem, 0, len(grs))
+	group := sync.WaitGroup{}
+	semaphore := make(chan struct{}, 20)
+	resultsChan := make(chan result.ResourceAccessItem)
 
-const (
-	clusterRoleName = "ClusterRole"
-	roleName        = "Role"
-)
+	var ns string
+	if namespace == nil {
+		ns = ""
+	} else {
+		ns = *namespace
+	}
+	for _, gr := range grs {
+		group.Add(1)
+		// copy captured variables
+		namespace := ns
+		gr := gr
+		go func(ctx context.Context, allowed chan<- result.ResourceAccessItem) {
+			defer group.Done()
 
-// GetSubjectAccess determines subjects with access to the given resource.
-func GetSubjectAccess(opts *options.RakkessOptions, resource, resourceName string) (*result.SubjectAccess, error) {
-	rbacClient, err := getRbacClient(opts)
-	if err != nil {
-		return nil, err
+			// exit early, if context is done
+			select {
+			case <-ctx.Done():
+				return
+			case semaphore <- struct{}{}:
+			}
+
+			logrus.Debugf("Checking access for %s", gr.fullName())
+
+			// This seems to be a bug in kubernetes. If namespace is set for non-namespaced
+			// resources, the access is reported as "allowed", but in fact it is forbidden.
+			if !gr.APIResource.Namespaced {
+				namespace = ""
+			}
+
+			allowedVerbs := sets.NewString(gr.APIResource.Verbs...)
+
+			access := make(map[string]int)
+			var errs []error
+			for _, v := range verbs {
+
+				// stop if cancelled
+				select {
+				case <-ctx.Done():
+					<-semaphore
+					return
+				default:
+				}
+
+				if !allowedVerbs.Has(v) {
+					access[v] = result.AccessNotApplicable
+					continue
+				}
+
+				review := &v1.SelfSubjectAccessReview{
+					Spec: v1.SelfSubjectAccessReviewSpec{
+						ResourceAttributes: &v1.ResourceAttributes{
+							Verb:      v,
+							Resource:  gr.APIResource.Name,
+							Group:     gr.APIGroup,
+							Namespace: namespace,
+						},
+					},
+				}
+				review, e := sar.Create(review)
+				if e != nil {
+					errs = append(errs, e)
+					access[v] = result.AccessRequestErr
+				} else {
+					access[v] = resultFor(&review.Status)
+				}
+
+			}
+			<-semaphore
+			allowed <- result.ResourceAccessItem{
+				Name:   gr.fullName(),
+				Access: access,
+				// todo(corneliusweig) Err is a write-only field
+				Err: errs,
+			}
+		}(ctx, resultsChan)
 	}
 
-	namespace := opts.ConfigFlags.Namespace
-	isNamespace := namespace != nil && *namespace != ""
+	go func() {
+		group.Wait()
+		close(resultsChan)
+	}()
 
-	sa := result.NewSubjectAccess(resource, resourceName)
-
-	if err := fetchMatchingClusterRoles(rbacClient, sa); err != nil {
-		if !isNamespace {
-			return nil, err
-		}
-		logrus.Warnf("incomplete result: %s", err)
-	} else if err := resolveClusterRoleBindings(rbacClient, sa); err != nil {
-		if !isNamespace {
-			return nil, err
-		}
-		logrus.Warnf("incomplete result: %s", err)
+	for gr := range resultsChan {
+		results = append(results, gr)
 	}
 
-	if !isNamespace {
-		logrus.Debugf("Skipping roles and rolebindings because namespace is missing")
-		return sa, nil
-	}
-
-	if err := fetchMatchingRoles(rbacClient, sa, *namespace); err != nil {
-		return nil, err
-	}
-	if err := resolveRoleBindings(rbacClient, sa, *namespace); err != nil {
-		return nil, err
-	}
-
-	return sa, nil
+	//  todo(corneliusweig) error is always nil
+	return result.NewResourceAccess(results), nil
 }
 
-func resolveRoleBindings(rbacClient clientv1.RoleBindingsGetter, sa *result.SubjectAccess, namespace string) error {
-	logrus.Debugf("fetching RoleBindings for namespace %s", namespace)
-	roleBindings, err := rbacClient.RoleBindings(namespace).List(metav1.ListOptions{})
-	if err != nil {
-		return err
+func resultFor(status *v1.SubjectAccessReviewStatus) int {
+	if status.Allowed {
+		return result.AccessAllowed
 	}
-	for _, rb := range roleBindings.Items {
-		r := result.RoleRef{
-			Name: rb.RoleRef.Name,
-			Kind: rb.RoleRef.Kind,
-		}
-		sa.ResolveRoleRef(r, rb.Subjects)
-	}
-	return nil
-}
-
-func resolveClusterRoleBindings(rbacClient clientv1.ClusterRoleBindingsGetter, sa *result.SubjectAccess) error {
-	logrus.Debugf("fetching ClusterRoleBindings")
-	clusterRoleBindings, err := rbacClient.ClusterRoleBindings().List(metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	for _, crb := range clusterRoleBindings.Items {
-		r := result.RoleRef{
-			Name: crb.RoleRef.Name,
-			Kind: crb.RoleRef.Kind,
-		}
-		sa.ResolveRoleRef(r, crb.Subjects)
-	}
-	return nil
-}
-
-func fetchMatchingClusterRoles(rbacClient clientv1.ClusterRolesGetter, sa *result.SubjectAccess) error {
-	logrus.Debugf("fetching clusterRoles")
-	roleList, err := rbacClient.ClusterRoles().List(metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-
-	for _, role := range roleList.Items {
-		r := result.RoleRef{
-			Name: role.Name,
-			Kind: clusterRoleName,
-		}
-		for _, rule := range role.Rules {
-			sa.MatchRules(r, rule)
-		}
-	}
-	return nil
-}
-
-func fetchMatchingRoles(rbacClient clientv1.RolesGetter, sa *result.SubjectAccess, namespace string) error {
-	logrus.Debugf("fetching roles for namespace %s", namespace)
-	roleList, err := rbacClient.Roles(namespace).List(metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-
-	for _, role := range roleList.Items {
-		r := result.RoleRef{
-			Name: role.Name,
-			Kind: roleName,
-		}
-		for _, rule := range role.Rules {
-			sa.MatchRules(r, rule)
-		}
-	}
-	return nil
-}
-
-func getRbacClientImpl(o *options.RakkessOptions) (clientv1.RbacV1Interface, error) {
-	restConfig, err := o.ConfigFlags.ToRESTConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return clientv1.NewForConfigOrDie(restConfig), nil
+	return result.AccessDenied
 }

@@ -17,228 +17,210 @@ limitations under the License.
 package client
 
 import (
+	"context"
 	"testing"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/rbac/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/api/authorization/v1"
+	apiV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	clientv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
-	"k8s.io/client-go/kubernetes/typed/rbac/v1/fake"
-	k8stesting "k8s.io/client-go/testing"
+	"k8s.io/client-go/kubernetes/typed/authorization/v1/fake"
+	authTesting "k8s.io/client-go/testing"
 )
 
-const (
-	roleNamespace       = "some-ns"
-	subjectKind         = "User"
-	testClusterRoleName = "some-clusterrole"
-	testRoleName        = "some-role"
-)
+type SelfSubjectAccessReviewDecision struct {
+	v1.ResourceAttributes
+	decision int
+}
 
-func TestGetSubjectAccess(t *testing.T) {
+func (d *SelfSubjectAccessReviewDecision) matches(other *v1.SelfSubjectAccessReview) bool {
+	return d.ResourceAttributes == *other.Spec.ResourceAttributes
+}
+
+type accessResult map[string]int
+
+func buildAccess() accessResult {
+	return make(map[string]int)
+}
+func (a accessResult) withResult(result int, verbs ...string) accessResult {
+	for _, v := range verbs {
+		a[v] = result
+	}
+	return a
+}
+func (a accessResult) allowed(verbs ...string) accessResult {
+	return a.withResult(result.AccessAllowed, verbs...)
+}
+func (a accessResult) denied(verbs ...string) accessResult {
+	return a.withResult(result.AccessDenied, verbs...)
+}
+func (a accessResult) get() map[string]int {
+	return a
+}
+
+func toGroupResource(group, name string, verbs ...string) GroupResource {
+	return GroupResource{
+		APIGroup: group,
+		APIResource: apiV1.APIResource{
+			Name:  name,
+			Verbs: verbs,
+		},
+	}
+}
+
+func TestCheckResourceAccess(t *testing.T) {
+	ctx := context.Background()
+
 	tests := []struct {
-		name                string
-		namespace           string
-		resource            string
-		clusterRoles        []v1.ClusterRole
-		clusterRoleBindings []v1.ClusterRoleBinding
-		roles               []v1.Role
-		roleBindings        []v1.RoleBinding
-		expected            map[result.SubjectRef]sets.String
+		name      string
+		verbs     []string
+		input     []GroupResource
+		decisions []*SelfSubjectAccessReviewDecision
+		expected  []result.ResourceAccessItem
 	}{
 		{
-			name:                "cluster-role and role matches",
-			namespace:           roleNamespace,
-			resource:            "deployments",
-			clusterRoles:        clusterRoles("deployments", "create"),
-			clusterRoleBindings: clusterRoleBindings("test-user"),
-			roles:               roles("deployments", "list"),
-			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
-			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: subjectKind}: sets.NewString("create", "list"),
+			name:  "single resource, single verb",
+			verbs: []string{"list"},
+			input: []GroupResource{toGroupResource("group1", "resource1", "list")},
+			decisions: []*SelfSubjectAccessReviewDecision{
+				{
+					v1.ResourceAttributes{
+						Resource: "resource1",
+						Group:    "group1",
+						Verb:     "list",
+					},
+					result.AccessAllowed,
+				},
+			},
+			expected: []result.ResourceAccessItem{
+				{Name: "resource1.group1", Access: buildAccess().allowed("list").get()},
 			},
 		},
 		{
-			name:                "cluster-role and role matches, multiple subjects",
-			namespace:           roleNamespace,
-			resource:            "deployments",
-			clusterRoles:        clusterRoles("deployments", "create"),
-			clusterRoleBindings: clusterRoleBindings("user1", "user2"),
-			roles:               roles("deployments", "list"),
-			roleBindings:        roleBindings(testRoleName, roleName, "user2", "user3"),
-			expected: map[result.SubjectRef]sets.String{
-				{Name: "user1", Kind: subjectKind}: sets.NewString("create"),
-				{Name: "user2", Kind: subjectKind}: sets.NewString("create", "list"),
-				{Name: "user3", Kind: subjectKind}: sets.NewString("list"),
+			name:  "single resource, invalid verb",
+			verbs: []string{"patch"},
+			input: []GroupResource{toGroupResource("group1", "resource1", "list")},
+			expected: []result.ResourceAccessItem{
+				{Name: "resource1.group1", Access: buildAccess().withResult(result.AccessNotApplicable, "patch").get()},
 			},
 		},
 		{
-			name:                "cluster-role and role matches, global scope",
-			namespace:           "", // empty namespace means global scope
-			resource:            "deployments",
-			clusterRoles:        clusterRoles("deployments", "create"),
-			clusterRoleBindings: clusterRoleBindings("test-user"),
-			roles:               roles("deployments", "list"),
-			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
-			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: subjectKind}: sets.NewString("create"),
+			name:  "single resource, multiple verbs",
+			verbs: []string{"list", "create", "delete"},
+			input: []GroupResource{toGroupResource("group1", "resource1", "list", "create", "delete")},
+			decisions: []*SelfSubjectAccessReviewDecision{
+				{
+					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
+					result.AccessAllowed,
+				},
+				{
+					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
+					result.AccessAllowed,
+				},
+				{
+					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "delete"},
+					result.AccessDenied,
+				},
+			},
+			expected: []result.ResourceAccessItem{
+				{
+					Name:   "resource1.group1",
+					Access: buildAccess().allowed("list", "create").denied("delete").get(),
+				},
 			},
 		},
 		{
-			name:         "rolebinding to clusterrole",
-			namespace:    roleNamespace,
-			resource:     "deployments",
-			clusterRoles: clusterRoles("deployments", "create"),
-			roleBindings: roleBindings(testClusterRoleName, clusterRoleName, "test-user"),
-			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: subjectKind}: sets.NewString("create"),
+			name:  "multiple resources, single verb",
+			verbs: []string{"list"},
+			input: []GroupResource{
+				toGroupResource("group1", "resource1", "list"),
+				toGroupResource("group1", "resource2", "list"),
+			},
+			decisions: []*SelfSubjectAccessReviewDecision{
+				{
+					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
+					result.AccessAllowed,
+				},
+				{
+					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "list"},
+					result.AccessDenied,
+				},
+			},
+			expected: []result.ResourceAccessItem{
+				{
+					Name:   "resource1.group1",
+					Access: buildAccess().allowed("list").get(),
+				},
+				{
+					Name:   "resource2.group1",
+					Access: buildAccess().denied("list").get(),
+				},
 			},
 		},
 		{
-			name:                "bindings for wrong resource",
-			namespace:           roleNamespace,
-			resource:            "deployments",
-			clusterRoles:        clusterRoles("configmaps", "create"),
-			clusterRoleBindings: clusterRoleBindings("test-user"),
-			roles:               roles("configmaps", "list"),
-			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
-			expected:            map[result.SubjectRef]sets.String{},
-		},
-		{
-			name:                "VerbAll role binding",
-			namespace:           roleNamespace,
-			resource:            "configmaps",
-			clusterRoles:        clusterRoles("configmaps", "create"),
-			clusterRoleBindings: clusterRoleBindings("test-user"),
-			roles:               roles("configmaps", v1.VerbAll),
-			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
-			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: subjectKind}: sets.NewString(constants.ValidVerbs...),
+			name:  "multiple resources, multiple verbs",
+			verbs: []string{"list", "create"},
+			input: []GroupResource{
+				toGroupResource("group1", "resource1", "list", "create"),
+				toGroupResource("group1", "resource2", "create"),
+				toGroupResource("group2", "resource1", "list"),
 			},
-		},
-		{
-			name:                "VerbAll clusterrole binding",
-			namespace:           roleNamespace,
-			resource:            "configmaps",
-			clusterRoles:        clusterRoles("configmaps", v1.VerbAll),
-			clusterRoleBindings: clusterRoleBindings("test-user"),
-			expected: map[result.SubjectRef]sets.String{
-				{Name: "test-user", Kind: subjectKind}: sets.NewString(constants.ValidVerbs...),
+			decisions: []*SelfSubjectAccessReviewDecision{
+				{
+					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
+					result.AccessAllowed,
+				},
+				{
+					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
+					result.AccessDenied,
+				},
+				{
+					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "create"},
+					result.AccessDenied,
+				},
+				{
+					v1.ResourceAttributes{Resource: "resource1", Group: "group2", Verb: "list"},
+					result.AccessAllowed,
+				},
+			},
+			expected: []result.ResourceAccessItem{
+				{
+					Name:   "resource1.group1",
+					Access: buildAccess().allowed("list").denied("create").get(),
+				},
+				{
+					Name:   "resource1.group2",
+					Access: buildAccess().withResult(result.AccessNotApplicable, "create").allowed("list").get(),
+				},
+				{
+					Name:   "resource2.group1",
+					Access: buildAccess().denied("create").withResult(result.AccessNotApplicable, "list").get(),
+				},
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			fakeReviews := &fake.FakeSelfSubjectAccessReviews{Fake: &fake.FakeAuthorizationV1{Fake: &authTesting.Fake{}}}
+			fakeReviews.Fake.AddReactor("create", "selfsubjectaccessreviews",
+				func(action authTesting.Action) (handled bool, ret runtime.Object, err error) {
+					sar := action.(authTesting.CreateAction).GetObject().(*v1.SelfSubjectAccessReview)
 
-			fakeRbacClient := &fake.FakeRbacV1{Fake: &k8stesting.Fake{}}
-			fakeRbacClient.Fake.AddReactor("list", "roles",
-				func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-					return true, &v1.RoleList{Items: test.roles}, nil
-				})
-			fakeRbacClient.Fake.AddReactor("list", "rolebindings",
-				func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-					return true, &v1.RoleBindingList{Items: test.roleBindings}, nil
-				})
-			fakeRbacClient.Fake.AddReactor("list", "clusterroles",
-				func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-					return true, &v1.ClusterRoleList{Items: test.clusterRoles}, nil
-				})
-			fakeRbacClient.Fake.AddReactor("list", "clusterrolebindings",
-				func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-					return true, &v1.ClusterRoleBindingList{Items: test.clusterRoleBindings}, nil
+					for _, d := range test.decisions {
+						if d.matches(sar) {
+							sar.Status.Allowed = d.decision == result.AccessAllowed
+							return true, sar, nil
+						}
+					}
+					return false, nil, nil
 				})
 
-			getRbacClient = func(*options.RakkessOptions) (clientv1.RbacV1Interface, error) {
-				return fakeRbacClient, nil
-			}
-			defer func() { getRbacClient = getRbacClientImpl }()
+			results, err := CheckResourceAccess(ctx, fakeReviews, test.input, test.verbs, nil)
 
-			opts := &options.RakkessOptions{
-				ConfigFlags: &genericclioptions.ConfigFlags{
-					Namespace: &test.namespace,
-				},
-			}
-			sa, err := GetSubjectAccess(opts, test.resource, "")
 			assert.NoError(t, err)
-			assert.Equal(t, test.resource, sa.Resource)
-			assert.Equal(t, test.expected, sa.Get())
+			assert.Equal(t, result.NewResourceAccess(test.expected), results)
 		})
-	}
-}
-
-func clusterRoles(resource string, verbs ...string) []v1.ClusterRole {
-	return []v1.ClusterRole{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: testClusterRoleName,
-			},
-			Rules: []v1.PolicyRule{
-				{
-					Verbs:     verbs,
-					Resources: []string{resource},
-				},
-			},
-		},
-	}
-}
-
-func clusterRoleBindings(subjects ...string) []v1.ClusterRoleBinding {
-	ss := make([]v1.Subject, 0, len(subjects))
-	for _, s := range subjects {
-		ss = append(ss, v1.Subject{
-			Kind: subjectKind,
-			Name: s,
-		})
-	}
-	return []v1.ClusterRoleBinding{
-		{
-			Subjects: ss,
-			RoleRef: v1.RoleRef{
-				Name: testClusterRoleName,
-				Kind: clusterRoleName,
-			},
-		},
-	}
-}
-
-func roles(resource string, verbs ...string) []v1.Role {
-	return []v1.Role{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      testRoleName,
-				Namespace: roleNamespace,
-			},
-			Rules: []v1.PolicyRule{
-				{
-					Verbs:     verbs,
-					Resources: []string{resource},
-				},
-			},
-		},
-	}
-}
-
-func roleBindings(role, kind string, subjects ...string) []v1.RoleBinding {
-	ss := make([]v1.Subject, 0, len(subjects))
-	for _, s := range subjects {
-		ss = append(ss, v1.Subject{
-			Kind: subjectKind,
-			Name: s,
-		})
-	}
-	return []v1.RoleBinding{
-		{
-			Subjects: ss,
-			RoleRef: v1.RoleRef{
-				Name: role,
-				Kind: kind,
-			},
-		},
 	}
 }
