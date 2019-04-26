@@ -17,7 +17,7 @@ It is also useful to find out who can hamper with some server resource.
 Check out the sub-command `rakkess resource` [below](#show-subjects-with-access-to-a-given-resource).
 
 ## Demo
-![rakkess demo](doc/demo-user-smaller.png "rakkess demo")
+![rakkess demo](doc/demo-user-smaller.png "rakkess --namespace default")
 
 ## Examples
 #### Show access for all resources
@@ -52,7 +52,7 @@ Check out the sub-command `rakkess resource` [below](#show-subjects-with-access-
   ```
   
 #### Show subjects with access to a given resource
-![rakkess demo](doc/demo-resource-smaller.png "rakkess resource demo")
+![rakkess demo](doc/demo-resource-smaller.png "rakkess resource configmaps --namespace default")
 - ...globally in all namespaces (only considers `ClusterRoleBindings`)
   ```bash
   rakkess resource configmaps
@@ -76,11 +76,9 @@ Check out the sub-command `rakkess resource` [below](#show-subjects-with-access-
 ##### Name-restricted roles
 Some roles only apply to resources with a specific name.
 To review such configurations, provide the resource name as additional argument.
-For example, show access rights for the `ConfigMap` called `ingress-controller-leader-nginx` in namespace `ingress-nginx`:
+For example, show access rights for the `ConfigMap` called `ingress-controller-leader-nginx` in namespace `ingress-nginx` (note the subtle difference for `nginx-ingress-serviceaccount` to the previous example):
 
-```bash
-rakkess r cm ingress-controller-leader-nginx -n ingress-nginx --verbs=all
-```
+![rakkess demo](doc/demo-named-resource-smaller.png "rakkess resource configmap ingress-controller-leader-nginx --namespace ingress-nginx")
   
 As `rakkess resource` needs to query `Roles`, `ClusterRoles`, and their bindings, it usually requires administrative cluster access.
 
@@ -103,18 +101,18 @@ When using the binaries for installation, also have a look at [doc/USAGE](doc/US
 
 #### Linux
 ```bash
-curl -Lo rakkess.gz https://github.com/corneliusweig/rakkess/releases/download/v0.3.0/rakkess-linux-amd64.gz && \
+curl -Lo rakkess.gz https://github.com/corneliusweig/rakkess/releases/download/v0.4.0/rakkess-linux-amd64.gz && \
   gunzip rakkess.gz && chmod +x rakkess && mv rakkess $GOPATH/bin/
 ```
 
 #### OSX
 ```bash
-curl -Lo rakkess.gz https://github.com/corneliusweig/rakkess/releases/download/v0.3.0/rakkess-darwin-amd64.gz && \
+curl -Lo rakkess.gz https://github.com/corneliusweig/rakkess/releases/download/v0.4.0/rakkess-darwin-amd64.gz && \
   gunzip rakkess.gz && chmod +x rakkess && mv rakkess $GOPATH/bin/
 ```
 
 #### Windows
-[https://github.com/corneliusweig/rakkess/releases/download/v0.3.0/rakkess-windows-amd64.zip](https://github.com/corneliusweig/rakkess/releases/download/v0.3.0/rakkess-windows-amd64.zip)
+[https://github.com/corneliusweig/rakkess/releases/download/v0.4.0/rakkess-windows-amd64.zip](https://github.com/corneliusweig/rakkess/releases/download/v0.4.0/rakkess-windows-amd64.zip)
 
 ### From source
 
