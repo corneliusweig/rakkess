@@ -60,12 +60,14 @@ kubectl access-matrix
 
 #### Show subjects with access to a given resource
 ![rakkess demo](demo-resource-smaller.png "rakkess resource demo")
-- ...globally in all namespaces (only `ClusterRoleBindings`)
+- ...globally in all namespaces (only considers `ClusterRoleBindings`)
   ```bash
   kubectl access-matrix resource configmaps
+  # or maybe you find the 'for' alias easier to read
+  kubectl access-matrix for configmaps
   ```
   
-- ...in a given namespace (`RoleBindings` and `ClusterRoleBindings`)
+- ...in a given namespace (considers `RoleBindings` and `ClusterRoleBindings`)
   ```bash
   kubectl access-matrix resource configmaps -n default
   ```
@@ -83,7 +85,7 @@ kubectl access-matrix
 ##### Name-restricted roles
 Some roles only apply to resources with a specific name.
 To review such configurations, provide the resource name as additional argument.
-For example, consider `ConfigMaps` with name `ingress-controller-leader-nginx` in namespace `ingress-nginx`:
+For example, show access rights for the `ConfigMap` called `ingress-controller-leader-nginx` in namespace `ingress-nginx`:
 
 ```bash
 kubectl access-matrix r cm ingress-controller-leader-nginx -n ingress-nginx --verbs=all

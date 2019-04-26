@@ -5,13 +5,16 @@
 [![LICENSE](https://img.shields.io/github/license/corneliusweig/rakkess.svg)](https://github.com/corneliusweig/rakkess/blob/master/LICENSE)
 [![Releases](https://img.shields.io/github/release-pre/corneliusweig/rakkess.svg)](https://github.com/corneliusweig/rakkess/releases)
 
-Review Access - kubectl plugin to show an access matrix for all available resources
+Review Access - kubectl plugin to show an access matrix for server resources
 
 ## Intro
 Have you ever wondered what access rights you have on a provided kubernetes cluster?
 For single resources you can use `kubectl auth can-i list deployments`, but maybe you are looking for a complete overview?
 This is what `rakkess` is for.
-It lists access rights for the current user for all server resources.
+It lists access rights for the current user and all server resources.
+
+It is also useful to find out who can hamper with some server resource.
+Check out the sub-command `rakkess resource` [below](#show-subjects-with-access-to-a-given-resource).
 
 ## Demo
 ![rakkess demo](doc/demo-user-smaller.png "rakkess demo")
@@ -50,12 +53,12 @@ It lists access rights for the current user for all server resources.
   
 #### Show subjects with access to a given resource
 ![rakkess demo](doc/demo-resource-smaller.png "rakkess resource demo")
-- ...globally in all namespaces (only `ClusterRoleBindings`)
+- ...globally in all namespaces (only considers `ClusterRoleBindings`)
   ```bash
   rakkess resource configmaps
   ```
   
-- ...in a given namespace (`RoleBindings` and `ClusterRoleBindings`)
+- ...in a given namespace (considers `RoleBindings` and `ClusterRoleBindings`)
   ```bash
   rakkess resource configmaps -n default
   ```
@@ -73,7 +76,7 @@ It lists access rights for the current user for all server resources.
 ##### Name-restricted roles
 Some roles only apply to resources with a specific name.
 To review such configurations, provide the resource name as additional argument.
-For example, consider `ConfigMaps` with name `ingress-controller-leader-nginx` in namespace `ingress-nginx`:
+For example, show access rights for the `ConfigMap` called `ingress-controller-leader-nginx` in namespace `ingress-nginx`:
 
 ```bash
 rakkess r cm ingress-controller-leader-nginx -n ingress-nginx --verbs=all
