@@ -68,7 +68,6 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 			allowedVerbs := sets.NewString(gr.APIResource.Verbs...)
 
 			access := make(map[string]int)
-			var errs []error
 			for _, v := range verbs {
 
 				// stop if cancelled
@@ -94,21 +93,17 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 						},
 					},
 				}
-				review, e := sar.Create(review)
-				if e != nil {
-					errs = append(errs, e)
+
+				if review, err := sar.Create(review); err != nil {
 					access[v] = result.AccessRequestErr
 				} else {
 					access[v] = resultFor(&review.Status)
 				}
-
 			}
 			<-semaphore
 			allowed <- result.ResourceAccessItem{
 				Name:   gr.fullName(),
 				Access: access,
-				// todo(corneliusweig) Err is a write-only field
-				Err: errs,
 			}
 		}(ctx, resultsChan)
 	}

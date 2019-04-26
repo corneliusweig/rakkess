@@ -29,8 +29,6 @@ type ResourceAccessItem struct {
 	Name string
 	// Access maps from verb to access code.
 	Access map[string]int
-	// Err holds access error if a SelfSubjectAccessReview failed.
-	Err []error
 }
 
 // ResourceAccess holds the access result for all resources.
