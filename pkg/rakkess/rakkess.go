@@ -49,11 +49,7 @@ func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 	}
 
 	namespace := opts.ConfigFlags.Namespace
-	results, err := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs, namespace)
-	if err != nil {
-		return errors.Wrap(err, "check resource access")
-	}
-
+	results := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs, namespace)
 	printer.PrintResults(opts.Streams.Out, opts.Verbs, opts.OutputFormat, results)
 
 	if namespace == nil || *namespace == "" {

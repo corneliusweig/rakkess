@@ -217,9 +217,8 @@ func TestCheckResourceAccess(t *testing.T) {
 					return false, nil, nil
 				})
 
-			results, err := CheckResourceAccess(ctx, fakeReviews, test.input, test.verbs, nil)
+			results := CheckResourceAccess(ctx, fakeReviews, test.input, test.verbs, nil)
 
-			assert.NoError(t, err)
 			assert.Equal(t, result.NewResourceAccess(test.expected), results)
 		})
 	}

@@ -30,7 +30,7 @@ import (
 // CheckResourceAccess determines the access rights for the given GroupResources and verbs.
 // Since it needs to do a lot of requests, the SelfSubjectAccessReviewInterface needs to
 // be configured for high queries per second.
-func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) (result.MatrixPrinter, error) {
+func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) result.MatrixPrinter {
 	results := make([]result.ResourceAccessItem, 0, len(grs))
 	group := sync.WaitGroup{}
 	semaphore := make(chan struct{}, 20)
@@ -122,8 +122,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 		results = append(results, gr)
 	}
 
-	//  todo(corneliusweig) error is always nil
-	return result.NewResourceAccess(results), nil
+	return result.NewResourceAccess(results)
 }
 
 func resultFor(status *v1.SubjectAccessReviewStatus) int {
