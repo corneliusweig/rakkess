@@ -24,6 +24,12 @@ import (
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/discovery"
+)
+
+var (
+	// for testing
+	getDiscoveryClient = getDiscoveryClientImpl
 )
 
 // GroupResource contains the APIGroup and APIResource
@@ -42,7 +48,7 @@ func (g GroupResource) fullName() string {
 
 // FetchAvailableGroupResources fetches a list of known APIResources on the server.
 func FetchAvailableGroupResources(opts *options.RakkessOptions) ([]GroupResource, error) {
-	client, err := opts.DiscoveryClient()
+	client, err := getDiscoveryClient(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "discovery client")
 	}
@@ -84,4 +90,8 @@ func FetchAvailableGroupResources(opts *options.RakkessOptions) ([]GroupResource
 	}
 
 	return grs, nil
+}
+
+func getDiscoveryClientImpl(opts *options.RakkessOptions) (discovery.CachedDiscoveryInterface, error) {
+	return opts.DiscoveryClient()
 }
