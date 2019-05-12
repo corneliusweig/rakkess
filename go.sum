@@ -17,6 +17,8 @@ github.com/blang/semver v3.5.1+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnweb
 github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 h1:gUqsFVdUKoRHNg8fkFd8gB5OOEa/g5EwlAHznb4zjbI=
 github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
+github.com/corneliusweig/tabwriter v0.0.0-20190512204542-5f8a091e83b5 h1:iMoW6t5AIY35+zpZ5jURPu16L6favadPR1TuKaSdfnA=
+github.com/corneliusweig/tabwriter v0.0.0-20190512204542-5f8a091e83b5/go.mod h1:DUmQHbnCLSgxjPeNlGcqKS1P9W1s4OYOsY3qvwK1H6U=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

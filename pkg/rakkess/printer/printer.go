@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
+	"github.com/corneliusweig/tabwriter"
 )
 
 type color int
@@ -40,7 +41,7 @@ var (
 
 // PrintResults configures the table style and delegates printing to result.MatrixPrinter.
 func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results result.MatrixPrinter) {
-	w := NewWriter(out, 4, 8, 2, ' ', CollapseEscape|StripEscape)
+	w := tabwriter.NewWriter(out, 4, 8, 2, ' ', tabwriter.SmashEscape|tabwriter.StripEscape)
 	defer w.Flush()
 
 	terminit.Do(func() { initTerminal(out) })

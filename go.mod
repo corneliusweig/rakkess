@@ -4,6 +4,7 @@ require (
 	contrib.go.opencensus.io/exporter/ocagent v0.4.6 // indirect
 	github.com/Azure/go-autorest v11.5.0+incompatible // indirect
 	github.com/blang/semver v3.5.1+incompatible
+	github.com/corneliusweig/tabwriter v0.0.0-20190512204542-5f8a091e83b5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/emicklei/go-restful v2.9.3+incompatible // indirect
 	github.com/evanphx/json-patch v4.1.0+incompatible // indirect
