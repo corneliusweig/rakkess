@@ -13,8 +13,8 @@ For single resources you can use `kubectl auth can-i list deployments`, but mayb
 This is what `rakkess` is for.
 It lists access rights for the current user and all server resources.
 
-It is also useful to find out who can hamper with some server resource.
-Check out the sub-command `rakkess resource` [below](#show-subjects-with-access-to-a-given-resource).
+It is also useful to find out who may interact with some server resource.
+Check out the sub-command `rakkess resource` [below](#show-subjects-with-access-to-a-given-resource1).
 
 ## Demo
 ![rakkess demo](doc/demo-user-smaller.png "rakkess --namespace default")
@@ -51,7 +51,7 @@ Check out the sub-command `rakkess resource` [below](#show-subjects-with-access-
   KUBECONFIG=otherconfig rakkess --context other-context
   ```
   
-#### Show subjects with access to a given resource
+#### Show subjects with access to a given resource<sup>[1](#credit-kubectl-who-can)</sup>
 ![rakkess demo](doc/demo-resource-smaller.png "rakkess resource configmaps --namespace default")
 - ...globally in all namespaces (only considers `ClusterRoleBindings`)
   ```bash
@@ -152,3 +152,6 @@ Binaries will be placed in the current directory.
 | _“THE BOMB. Love it.”_ – [@ralph_squillace](https://twitter.com/ralph_squillace/status/1100844255830896640) |
 | _“This made my day. Well, not actually today but I definitively will use it a lot.”_ – [@Soukron](https://twitter.com/Soukron/status/1100690060129775617) |
 
+---
+
+<a name="credit-kubectl-who-can">[1]</a>: This mode was inspired by [kubectl-who-can](https://github.com/aquasecurity/kubectl-who-can)
