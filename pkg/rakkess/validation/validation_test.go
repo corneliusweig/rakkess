@@ -41,7 +41,7 @@ func TestOutputFormat(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual := outputFormat(test.format)
+			actual := OutputFormat(test.format)
 			if test.expected != "" {
 				assert.EqualError(t, actual, test.expected)
 			} else {

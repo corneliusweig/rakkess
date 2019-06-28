@@ -46,7 +46,7 @@ type SubjectAccess struct {
 	ResourceName string
 	// roles holds all rule data concerning this resource and is extracted from Roles and ClusterRoles.
 	roles map[RoleRef]sets.String
-	// roles holds all subject access data for this resource and is extracted from RoleBindings and ClusterRoleBindings.
+	// subjectAccess holds all subject access data for this resource and is extracted from RoleBindings and ClusterRoleBindings.
 	subjectAccess map[SubjectRef]sets.String
 }
 

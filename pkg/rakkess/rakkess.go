@@ -63,7 +63,7 @@ func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 // prints the result as a matrix with verbs in the horizontal and subject names
 // in the vertical direction.
 func Subject(opts *options.RakkessOptions, resource, resourceName string) error {
-	if err := validation.Options(opts); err != nil {
+	if err := validation.OutputFormat(opts.OutputFormat); err != nil {
 		return err
 	}
 
