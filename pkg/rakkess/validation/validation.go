@@ -31,10 +31,10 @@ func Options(opts *options.RakkessOptions) error {
 	if err := verbs(opts.Verbs); err != nil {
 		return err
 	}
-	return outputFormat(opts.OutputFormat)
+	return OutputFormat(opts.OutputFormat)
 }
 
-func outputFormat(format string) error {
+func OutputFormat(format string) error {
 	for _, o := range constants.ValidOutputFormats {
 		if o == format {
 			return nil
