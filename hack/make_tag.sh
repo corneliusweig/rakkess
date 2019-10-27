@@ -16,6 +16,8 @@
 
 set -euo pipefail
 
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
 echo -n "Please enter the old tag (maybe $(git describe HEAD --always --tag | sed 's:-.*::')): "
 read -r OLD_TAG
 
@@ -41,4 +43,7 @@ then
 fi
 
 git commit -a -m "Create tag ${NEW_TAG}"
-git tag "${NEW_TAG}"
+
+release_note="$(${DIR}/release_notes.sh)"
+
+git tag -a -m "$release_note" "${NEW_TAG}"
