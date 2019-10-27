@@ -18,6 +18,8 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -38,6 +40,8 @@ const (
 
 	Additionally, you may want to output the completion to a file and source in your .bashrc
 `
+
+	zshCompdef = "\ncompdef _rakkess rakkess\n"
 )
 
 var completionCmd = &cobra.Command{
@@ -58,7 +62,7 @@ var completionCmd = &cobra.Command{
 		case "bash":
 			err = rootCmd.GenBashCompletion(out)
 		case "zsh":
-			err = rootCmd.GenZshCompletion(out)
+			err = getZshCompletion(out)
 		}
 		if err != nil {
 			logrus.Fatal(err)
@@ -68,4 +72,12 @@ var completionCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(completionCmd)
+}
+
+func getZshCompletion(out io.Writer) error {
+	if err := rootCmd.GenZshCompletion(out); err != nil {
+		return err
+	}
+	_, err := io.WriteString(out, zshCompdef)
+	return err
 }
