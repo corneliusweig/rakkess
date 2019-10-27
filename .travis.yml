@@ -8,6 +8,7 @@ go:
   - "1.12.x"
 
 env:
+  global:
   - GO111MODULE=on
   - GOPROXY=https://proxy.golang.org
 
