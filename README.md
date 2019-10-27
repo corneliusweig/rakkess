@@ -11,7 +11,7 @@ Review Access - kubectl plugin to show an access matrix for server resources
 Have you ever wondered what access rights you have on a provided kubernetes cluster?
 For single resources you can use `kubectl auth can-i list deployments`, but maybe you are looking for a complete overview?
 This is what `rakkess` is for.
-It lists access rights for the current user and all server resources.
+It lists access rights for the current user and all server resources, similar to `kubectl auth can-i --list`.
 
 It is also useful to find out who may interact with some server resource.
 Check out the sub-command `rakkess resource` [below](#show-subjects-with-access-to-a-given-resource1).

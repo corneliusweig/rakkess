@@ -67,10 +67,10 @@ help:
 	@echo '  - coverage: run unit tests with coverage'
 	@echo '  - deploy:   build artifacts for a new deployment'
 	@echo '  - dev:      build the binary for the current platform'
-	@echo '  - dist:     create a tar archive of the source code
+	@echo '  - dist:     create a tar archive of the source code'
 	@echo '  - help:     print this help'
 	@echo '  - install:  install the `rakkess` binary in your gopath'
-	@echo '  - lint:     run golangci-lint
+	@echo '  - lint:     run golangci-lint'
 	@echo '  - test:     run unit tests'
 
 .PHONY: coverage
