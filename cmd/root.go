@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess"
 	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
@@ -108,8 +109,8 @@ func init() {
 
 // AddRakkessFlags sets up common flags for subcommands.
 func AddRakkessFlags(cmd *cobra.Command) {
-	cmd.Flags().StringSliceVar(&rakkessOptions.Verbs, constants.FlagVerbs, []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of %s", constants.ValidVerbs))
-	cmd.Flags().StringVarP(&rakkessOptions.OutputFormat, constants.FlagOutput, "o", "icon-table", fmt.Sprintf("output format out of %s", constants.ValidOutputFormats))
+	cmd.Flags().StringSliceVar(&rakkessOptions.Verbs, constants.FlagVerbs, []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of (%s)", strings.Join(constants.ValidVerbs, ", ")))
+	cmd.Flags().StringVarP(&rakkessOptions.OutputFormat, constants.FlagOutput, "o", "icon-table", fmt.Sprintf("output format out of (%s)", strings.Join(constants.ValidOutputFormats, ", ")))
 
 	rakkessOptions.ConfigFlags.AddFlags(cmd.Flags())
 }
