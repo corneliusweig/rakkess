@@ -97,8 +97,9 @@ lint:
 
 .PRECIOUS: %.zip
 %.zip: %.exe
-	cp LICENSE $(BUILDDIR)
-	zip $(patsubst %.exe.zip, %.zip, $@) $(BUILDDIR)/LICENSE $<
+	cp LICENSE $(BUILDDIR) && \
+	cd $(BUILDDIR) && \
+	zip $(patsubst $(BUILDDIR)/%, %, $@) LICENSE $(patsubst $(BUILDDIR)/%, %, $<)
 
 .PRECIOUS: %.gz
 %.gz: %
