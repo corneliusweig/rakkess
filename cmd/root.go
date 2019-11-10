@@ -52,28 +52,28 @@ More on https://github.com/corneliusweig/rakkess/blob/v0.4.1/doc/USAGE.md#usage
 
 	rakkessExamples = `
   Review access to cluster-scoped resources
-  $ rakkess
+   $ rakkess
 
   Review access to namespaced resources in 'default'
-  $ rakkess --namespace default
+   $ rakkess --namespace default
 
   Review access as a different user
-  $ rakkess --as other-user
+   $ rakkess --as other-user
 
   Review access as a service-account
-  $ rakkess --sa kube-system:namespace-controller
+   $ rakkess --sa kube-system:namespace-controller
 
   Review access for different verbs
-  $ rakkess --verbs get,watch,patch
+   $ rakkess --verbs get,watch,patch
 `
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "rakkess",
+	Use:     constants.CommandName,
 	Short:   "Review access - show an access matrix for all resources",
-	Long:    rakkessLongDescription,
-	Example: rakkessExamples,
+	Long:    constants.HelpTextMapName(rakkessLongDescription),
+	Example: constants.HelpTextMapName(rakkessExamples),
 	Args:    cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithCancel(context.Background())

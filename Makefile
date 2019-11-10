@@ -57,7 +57,7 @@ GO_FILES  := $(shell find . -type f -name '*.go')
 
 .PHONY: test
 test:
-	go test ./...
+	go test -tags rakkessbuild ./...
 
 .PHONY: help
 help:
@@ -75,7 +75,7 @@ help:
 
 .PHONY: coverage
 coverage: $(BUILDDIR)
-	go test -coverprofile=$(BUILDDIR)/coverage.txt -covermode=atomic ./...
+	go test -tags rakkessbuild -coverprofile=$(BUILDDIR)/coverage.txt -covermode=atomic ./...
 
 .PHONY: all
 all: $(TARGETS)

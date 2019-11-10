@@ -75,31 +75,3 @@ func TestMainVersionCommand(t *testing.T) {
 	assert.Contains(t, stdout.String(), "rakkess: ")
 	assert.Equal(t, "", stderr.String())
 }
-
-func TestMainCompletionCommand(t *testing.T) {
-	tests := [][]string{
-		{"rakkess", "completion", "zsh"},
-		{"rakkess", "completion", "bash"},
-	}
-
-	for _, testargs := range tests {
-		t.Run(testargs[2], func(t *testing.T) {
-			origOpts := rakkessOptions
-			newOpts, _, stdout, stderr := options.NewTestRakkessOptions()
-
-			defer func(args []string) {
-				os.Args = args
-				rakkessOptions = origOpts
-			}(os.Args)
-			os.Args = testargs
-			rakkessOptions = newOpts
-
-			err := Execute()
-
-			assert.NoError(t, err)
-			assert.NotEmpty(t, stdout.String())
-			assert.Equal(t, "", stderr.String())
-		})
-
-	}
-}
