@@ -1,3 +1,5 @@
+// +build rakkessbuild
+
 /*
 Copyright 2019 Cornelius Weig
 

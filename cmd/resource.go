@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"github.com/corneliusweig/rakkess/pkg/rakkess"
+	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -41,27 +42,29 @@ More on https://github.com/corneliusweig/rakkess/blob/v0.4.1/doc/USAGE.md#usage
 
 	rakkessSubjectExamples = `
   Review access to deployments in any namespace
-  $ rakkess resource deployments
+   $ rakkess for deployments
+   or
+   $ rakkess resource deployments
 
   Review access to deployments in the default namespace (with shorthands)
-  $ rakkess r deploy --namespace default
+   $ rakkess for deploy --namespace default
 
   Review access to deployments with custom verbs
-  $ rakkess r deploy --verbs get,watch,deletecollection
+   $ rakkess for deploy --verbs get,watch,deletecollection
 
   Review access to a config-map with a specific name
-  $ rakkess r cm config-map-name --verbs=all
+   $ rakkess for cm config-map-name --verbs=all
 `
 )
 
 // resourceCmd represents the resource command
 var resourceCmd = &cobra.Command{
-	Use:     "resource <resource> [name]",
-	Aliases: []string{"r", "for"},
+	Use:     "for <resource> [name]",
+	Aliases: []string{"resource", "r"},
 	Short:   "Show all subjects with access to a given resource",
 	Args:    cobra.RangeArgs(1, 2),
-	Long:    rakkessSubjectLong,
-	Example: rakkessSubjectExamples,
+	Long:    constants.HelpTextMapName(rakkessSubjectLong),
+	Example: constants.HelpTextMapName(rakkessSubjectExamples),
 	Run: func(cmd *cobra.Command, args []string) {
 		resource := args[0]
 		var resourceName string
