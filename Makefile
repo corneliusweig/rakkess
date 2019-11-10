@@ -57,7 +57,7 @@ GO_FILES  := $(shell find . -type f -name '*.go')
 
 .PHONY: test
 test:
-	go test -tags rakkessbuild ./...
+	go test -tags accessmatrix ./...
 
 .PHONY: help
 help:
@@ -76,7 +76,7 @@ help:
 
 .PHONY: coverage
 coverage: $(BUILDDIR)
-	go test -tags rakkessbuild -coverprofile=$(BUILDDIR)/coverage.txt -covermode=atomic ./...
+	go test -coverprofile=$(BUILDDIR)/coverage.txt -covermode=atomic ./...
 
 .PHONY: all
 all: lint test dev
@@ -85,13 +85,13 @@ all: lint test dev
 dev: CGO_ENABLED := 1
 dev: GO_LDFLAGS := $(subst -s -w,,$(GO_LDFLAGS))
 dev:
-	go build -tags rakkessbuild -race -ldflags $(GO_LDFLAGS) -o rakkess main.go
+	go build -race -ldflags $(GO_LDFLAGS) -o rakkess main.go
 
 build-rakkess: $(GO_FILES) $(BUILDDIR)
-	gox -osarch="$(PLATFORMS)" -tags rakkessbuild -ldflags $(GO_LDFLAGS) -output="out/rakkess-{{.Arch}}-{{.OS}}"
+	gox -osarch="$(PLATFORMS)" -ldflags $(GO_LDFLAGS) -output="out/rakkess-{{.Arch}}-{{.OS}}"
 
 build-access-matrix: $(GO_FILES) $(BUILDDIR)
-	gox -osarch="$(PLATFORMS)" -ldflags $(GO_LDFLAGS) -output="out/access-matrix-{{.Arch}}-{{.OS}}"
+	gox -osarch="$(PLATFORMS)" -tags accessmatrix -ldflags $(GO_LDFLAGS) -output="out/access-matrix-{{.Arch}}-{{.OS}}"
 
 .PHONY: lint
 lint:

@@ -1,4 +1,4 @@
-// +build rakkessbuild
+// +build !accessmatrix
 
 /*
 Copyright 2019 Cornelius Weig
