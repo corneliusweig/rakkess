@@ -23,14 +23,14 @@ VERSION   ?= $(shell git describe --always --tags --dirty)
 GOOS      ?= $(shell go env GOOS)
 GOPATH    ?= $(shell go env GOPATH)
 
-BUILDDIR  := out
-PLATFORMS ?= linux windows darwin
-DISTFILE  := $(BUILDDIR)/$(VERSION).tar.gz
-TARGETS   := $(patsubst %,$(BUILDDIR)/$(PROJECT)-%-$(GOARCH),$(PLATFORMS))
-ASSETS    := $(BUILDDIR)/rakkess-linux-$(GOARCH).gz $(BUILDDIR)/rakkess-darwin-$(GOARCH).gz $(BUILDDIR)/rakkess-windows-$(GOARCH).zip
-BUNDLE    := $(BUILDDIR)/bundle.tar.gz
-CHECKSUMS := $(patsubst %,%.sha256,$(ASSETS))
-CHECKSUMS += $(BUNDLE).sha256
+BUILDDIR   := out
+PLATFORMS  ?= darwin/amd64 windows/amd64 linux/amd64
+DISTFILE   := $(BUILDDIR)/$(VERSION).tar.gz
+ASSETS     := $(BUILDDIR)/rakkess-$(GOARCH)-darwin.gz $(BUILDDIR)/rakkess-$(GOARCH)-linux.gz $(BUILDDIR)/rakkess-$(GOARCH)-windows.exe.zip
+ASSETSKREW := $(patsubst %,$(BUILDDIR)/access-matrix-$(GOARCH)-%,darwin windows.exe linux)
+BUNDLE     := $(BUILDDIR)/bundle.tar.gz
+CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS))
+CHECKSUMS  += $(BUNDLE).sha256
 
 VERSION_PACKAGE := $(REPOPATH)/pkg/rakkess/version
 
@@ -69,29 +69,29 @@ help:
 	@echo '  - dev:      build the binary for the current platform'
 	@echo '  - dist:     create a tar archive of the source code'
 	@echo '  - help:     print this help'
-	@echo '  - install:  install the `rakkess` binary in your gopath'
 	@echo '  - lint:     run golangci-lint'
 	@echo '  - test:     run unit tests'
+	@echo '  - build-rakkess:        build binaries for all supported platforms'
+	@echo '  - build-access-matrix:  build binaries for all supported platforms'
 
 .PHONY: coverage
 coverage: $(BUILDDIR)
 	go test -tags rakkessbuild -coverprofile=$(BUILDDIR)/coverage.txt -covermode=atomic ./...
 
 .PHONY: all
-all: $(TARGETS)
+all: lint test dev
 
 .PHONY: dev
-dev: GO_FLAGS := -race
 dev: CGO_ENABLED := 1
 dev: GO_LDFLAGS := $(subst -s -w,,$(GO_LDFLAGS))
-dev: $(BUILDDIR)/rakkess-$(shell go env GOOS)-$(GOARCH)
-	@mv $< $(PROJECT)
+dev:
+	go build -tags rakkessbuild -race -ldflags $(GO_LDFLAGS) -o rakkess main.go
 
-$(BUILDDIR)/$(PROJECT)-%-$(GOARCH): $(GO_FILES) $(BUILDDIR)
-	GOOS=$* go build $(GO_FLAGS) -ldflags $(GO_LDFLAGS) -o $@ main.go
+build-rakkess: $(GO_FILES) $(BUILDDIR)
+	gox -osarch="$(PLATFORMS)" -tags rakkessbuild -ldflags $(GO_LDFLAGS) -output="out/rakkess-{{.Arch}}-{{.OS}}"
 
-install: $(BUILDDIR)/$(PROJECT)-$(GOOS)-$(GOARCH)
-	@mv -i $< $(GOPATH)/bin/$(PROJECT)
+build-access-matrix: $(GO_FILES) $(BUILDDIR)
+	gox -osarch="$(PLATFORMS)" -ldflags $(GO_LDFLAGS) -output="out/access-matrix-{{.Arch}}-{{.OS}}"
 
 .PHONY: lint
 lint:
@@ -106,8 +106,10 @@ lint:
 	$(COMPRESS) "$<" > "$@"
 
 .INTERMEDIATE: $(BUNDLE:.gz=)
-$(BUNDLE:.gz=): $(TARGETS)
-	tar cf "$@" -C $(BUILDDIR) $(patsubst $(BUILDDIR)/%,%,$(TARGETS))
+$(BUNDLE:.gz=): $(ASSETSKREW)
+	cp LICENSE $(BUILDDIR)
+	tar cf "$@" -C $(BUILDDIR) $(patsubst $(BUILDDIR)/%,%,$(ASSETSKREW)) LICENSE
+	rm $(BUILDDIR)/LICENSE
 
 $(BUILDDIR):
 	mkdir -p "$@"
@@ -116,16 +118,20 @@ $(BUILDDIR):
 	shasum -a 256 $< > $@
 
 .INTERMEDIATE: $(DISTFILE:.gz=)
-$(DISTFILE:.gz=): $(TARGETS)
+$(DISTFILE:.gz=): $(BUILDDIR)
 	git archive --prefix="rakkess-$(VERSION)/" --format=tar HEAD > "$@"
 
 .PHONY: deploy
 deploy: $(CHECKSUMS)
-	$(RM) $(TARGETS)
 
 .PHONY: dist
 dist: $(DISTFILE)
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGETS) $(CHECKSUMS) $(DISTFILE) $(BUNDLE)
+	$(RM) -r $(BUILDDIR) rakkess
+
+.INTERMEDIATE: $(basename $(ASSETS))
+$(basename $(ASSETS)): build-rakkess
+.INTERMEDIATE: $(ASSETSKREW)
+$(ASSETSKREW): build-access-matrix
