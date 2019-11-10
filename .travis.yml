@@ -33,8 +33,8 @@ deploy:
   api_key:
     secure: iSu4wdxNTZB/12MDMVt899nbk8Szu/X9hKR1B23ca10EwMqdFGrvmEgJ9fp5T9rvx/qW4wp1YCabUEg49bUYC2kR7Y5bQZ/Mz51tVLRvKDYWJkOTDh997GOIa1XaItIOPRmu8w6JEWh2CeGd5N8dZ5wayM1oRz52eHP/JMav746SZZkDfDC5ZAxPgeVUhasEI+ek3DyZaxGeI+IoavoDhV33LmuHU8fceEPilELxOF0djcPGQUQaAYZDzUpfNmr9RoivxLV3MOFQTFlMXN9Mm10bpdFk4yU/z6w80FaNYyqZExgyWYGZzBMOn8sKiVn12cn0stNWaCnhTZVv/rgZL00fDUXEtAfNKdwV7egGqvPV2xTM1fcaZeN2BuJFDHzaHuC8cxItfzAo0kLF6KNgp2+bx8dUQObxw5AoTrRMUAFVOuEc2n/kKuGgHbM0yMyByYCKdxx0YfOOJ0bpm1uaDHKmta7Si1MVWSuXJS4OIoNxsueHKEiYibDeekw6bxCKRD4waM0i7dQWXpMlXzastwQyjWFClQzEZSiOg8pYsikGyh9BwmosEVy9x8hzAwYYYxhRsDaNV3bp9UvTINWRPVXVb6hepAmR5jTQlZUrNmf8NYUov/N8/3Whzhx97aBPaUM8BPOsNyLtCvZoDHtEOfcc/tGpQ50ZE6tMN3XhUHE=
   file:
-  - out/bundle.tar.gz
-  - out/bundle.tar.gz.sha256
+  - out/krew-bundle.tar.gz
+  - out/krew-bundle.tar.gz.sha256
   - out/rakkess-amd64-darwin.gz
   - out/rakkess-amd64-darwin.gz.sha256
   - out/rakkess-amd64-linux.gz

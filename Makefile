@@ -28,7 +28,7 @@ PLATFORMS  ?= darwin/amd64 windows/amd64 linux/amd64
 DISTFILE   := $(BUILDDIR)/$(VERSION).tar.gz
 ASSETS     := $(BUILDDIR)/rakkess-$(GOARCH)-darwin.gz $(BUILDDIR)/rakkess-$(GOARCH)-linux.gz $(BUILDDIR)/rakkess-$(GOARCH)-windows.exe.zip
 ASSETSKREW := $(patsubst %,$(BUILDDIR)/access-matrix-$(GOARCH)-%,darwin windows.exe linux)
-BUNDLE     := $(BUILDDIR)/bundle.tar.gz
+BUNDLE     := $(BUILDDIR)/krew-bundle.tar.gz
 CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS))
 CHECKSUMS  += $(BUNDLE).sha256
 
