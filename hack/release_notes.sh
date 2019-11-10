@@ -20,8 +20,12 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 if ! [[ -x "${DIR}/release-notes" ]]; then
   echo >&2 'Installing release-notes'
-  cd "${DIR}/tools"
-  GOBIN="$DIR" GO111MODULE=on go install github.com/corneliusweig/release-notes
+  relnotes_dir="$(mktemp -d)"
+  trap 'rm -rf -- ${relnotes_dir}' EXIT
+
+  cd "$relnotes_dir"
+  go mod init foo
+  GOBIN="${DIR}" go get github.com/corneliusweig/release-notes@v0.1.0
   cd -
 fi
 
