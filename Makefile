@@ -26,11 +26,9 @@ GOPATH    ?= $(shell go env GOPATH)
 BUILDDIR   := out
 PLATFORMS  ?= darwin/amd64 windows/amd64 linux/amd64
 DISTFILE   := $(BUILDDIR)/$(VERSION).tar.gz
-ASSETS     := $(BUILDDIR)/rakkess-$(GOARCH)-darwin.gz $(BUILDDIR)/rakkess-$(GOARCH)-linux.gz $(BUILDDIR)/rakkess-$(GOARCH)-windows.exe.zip
-ASSETSKREW := $(patsubst %,$(BUILDDIR)/access-matrix-$(GOARCH)-%,darwin windows.exe linux)
-BUNDLE     := $(BUILDDIR)/krew-bundle.tar.gz
-CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS))
-CHECKSUMS  += $(BUNDLE).sha256
+ASSETS     := $(BUILDDIR)/rakkess-$(GOARCH)-darwin.tar.gz $(BUILDDIR)/rakkess-$(GOARCH)-linux.tar.gz $(BUILDDIR)/rakkess-$(GOARCH)-windows.zip
+ASSETSKREW := $(BUILDDIR)/access-matrix-$(GOARCH)-darwin.tar.gz $(BUILDDIR)/access-matrix-$(GOARCH)-linux.tar.gz $(BUILDDIR)/access-matrix-$(GOARCH)-windows.zip
+CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS) $(ASSETSKREW))
 
 VERSION_PACKAGE := $(REPOPATH)/pkg/rakkess/version
 
@@ -98,18 +96,17 @@ lint:
 	hack/run_lint.sh
 
 .PRECIOUS: %.zip
-%.zip: %
-	zip $@ $<
+%.zip: %.exe
+	cp LICENSE $(BUILDDIR)
+	zip $(patsubst %.exe.zip, %.zip, $@) $(BUILDDIR)/LICENSE $<
 
 .PRECIOUS: %.gz
 %.gz: %
 	$(COMPRESS) "$<" > "$@"
 
-.INTERMEDIATE: $(BUNDLE:.gz=)
-$(BUNDLE:.gz=): $(ASSETSKREW)
+%.tar: %
 	cp LICENSE $(BUILDDIR)
-	tar cf "$@" -C $(BUILDDIR) $(patsubst $(BUILDDIR)/%,%,$(ASSETSKREW)) LICENSE
-	rm $(BUILDDIR)/LICENSE
+	tar cf "$@" -C $(BUILDDIR) LICENSE $(patsubst $(BUILDDIR)/%,%,$^)
 
 $(BUILDDIR):
 	mkdir -p "$@"
@@ -123,6 +120,7 @@ $(DISTFILE:.gz=): $(BUILDDIR)
 
 .PHONY: deploy
 deploy: $(CHECKSUMS)
+	$(RM) $(BUILDDIR)/LICENSE
 
 .PHONY: dist
 dist: $(DISTFILE)
@@ -131,7 +129,10 @@ dist: $(DISTFILE)
 clean:
 	$(RM) -r $(BUILDDIR) rakkess
 
-.INTERMEDIATE: $(basename $(ASSETS))
-$(basename $(ASSETS)): build-rakkess
-.INTERMEDIATE: $(ASSETSKREW)
-$(ASSETSKREW): build-access-matrix
+$(BUILDDIR)/rakkess-amd64-linux: build-rakkess
+$(BUILDDIR)/rakkess-amd64-darwin: build-rakkess
+$(BUILDDIR)/rakkess-amd64-windows.exe: build-rakkess
+
+$(BUILDDIR)/access-matrix-amd64-linux: build-access-matrix
+$(BUILDDIR)/access-matrix-amd64-darwin: build-access-matrix
+$(BUILDDIR)/access-matrix-amd64-windows.exe: build-access-matrix
