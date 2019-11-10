@@ -12,6 +12,9 @@ env:
   - GO111MODULE=on
   - GOPROXY=https://proxy.golang.org
 
+before_install:
+  - go mod download
+
 script:
 - make test
 - make coverage
@@ -22,6 +25,7 @@ after_success:
 - bash <(curl -s https://codecov.io/bash)
 
 before_deploy:
+- hack/install-gox.sh
 - make deploy
 
 deploy:
