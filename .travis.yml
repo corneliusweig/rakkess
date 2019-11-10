@@ -37,6 +37,6 @@ deploy:
   - out/rakkess-darwin-amd64.gz.sha256
   - out/bundle.tar.gz
   - out/bundle.tar.gz.sha256
-  cleanup: false
+  skip_cleanup: true
   on:
     tags: true
