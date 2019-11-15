@@ -7,11 +7,6 @@ os:
 go:
 - 1.13.x
 
-env:
-  global:
-  - GO111MODULE=on
-  - GOPROXY=https://proxy.golang.org
-
 before_install:
   - go mod download
 
