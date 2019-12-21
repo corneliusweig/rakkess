@@ -101,14 +101,18 @@ When using the binaries for installation, also have a look at [doc/USAGE](doc/US
 
 #### Linux
 ```bash
-curl -Lo rakkess.gz https://github.com/corneliusweig/rakkess/releases/download/v0.4.2/rakkess-linux-amd64.gz && \
-  gunzip rakkess.gz && chmod +x rakkess && mv rakkess $GOPATH/bin/
+curl -LO https://github.com/corneliusweig/rakkess/releases/download/v0.4.2/rakkess-amd64-linux.tar.gz \
+  && tar xf rakkess-amd64-linux.tar.gz rakkess-amd64-linux \
+  && chmod +x rakkess-amd64-linux \
+  && mv -i rakkess-amd64-linux $GOPATH/bin/rakkess
 ```
 
 #### OSX
 ```bash
-curl -Lo rakkess.gz https://github.com/corneliusweig/rakkess/releases/download/v0.4.2/rakkess-darwin-amd64.gz && \
-  gunzip rakkess.gz && chmod +x rakkess && mv rakkess $GOPATH/bin/
+curl -LO https://github.com/corneliusweig/rakkess/releases/download/v0.4.2/rakkess-amd64-darwin.tar.gz \
+  && tar xf rakkess-amd64-darwin.tar.gz rakkess-amd64-darwin \
+  && chmod +x rakkess-amd64-darwin \
+  && mv -i rakkess-amd64-darwin $GOPATH/bin/rakkess
 ```
 
 #### Windows
