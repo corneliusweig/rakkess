@@ -17,3 +17,5 @@ require (
 	k8s.io/cli-runtime v0.17.2
 	k8s.io/client-go v0.17.2
 )
+
+go 1.13
