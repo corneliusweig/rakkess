@@ -64,7 +64,10 @@ func FetchAvailableGroupResources(opts *options.RakkessOptions) ([]GroupResource
 
 	resources, err := resourcesFetcher()
 	if err != nil {
-		return nil, errors.Wrap(err, "get preferred resources")
+		if resources == nil {
+			return nil, errors.Wrap(err, "get preferred resources")
+		}
+		logrus.Warnf("Could not fetch full list of resources, result will be incomplete: %s", err)
 	}
 
 	var grs []GroupResource

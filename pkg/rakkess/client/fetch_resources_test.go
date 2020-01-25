@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
@@ -32,6 +33,7 @@ import (
 type fakeCachedDiscoveryInterface struct {
 	invalidateCalls int
 	next            metav1.APIResourceList
+	err             error
 	fresh           bool
 }
 
@@ -68,16 +70,16 @@ func (c *fakeCachedDiscoveryInterface) ServerResources() ([]*metav1.APIResourceL
 
 func (c *fakeCachedDiscoveryInterface) ServerPreferredResources() ([]*metav1.APIResourceList, error) {
 	if c.fresh {
-		return []*metav1.APIResourceList{&c.next}, nil
+		return []*metav1.APIResourceList{&c.next}, c.err
 	}
-	return nil, nil
+	return nil, c.err
 }
 
 func (c *fakeCachedDiscoveryInterface) ServerPreferredNamespacedResources() ([]*metav1.APIResourceList, error) {
 	if c.fresh {
-		return []*metav1.APIResourceList{&c.next}, nil
+		return []*metav1.APIResourceList{&c.next}, c.err
 	}
-	return nil, nil
+	return nil, c.err
 }
 
 func (c *fakeCachedDiscoveryInterface) ServerVersion() (*version.Info, error) {
@@ -115,12 +117,12 @@ func TestFetchAvailableGroupResources(t *testing.T) {
 		namespace string
 		verbs     []string
 		resources metav1.APIResourceList
+		err       error
 		expected  interface{}
 	}{
 		{
-			name:      "cluster resources",
-			namespace: "",
-			verbs:     []string{"list"},
+			name:  "cluster resources",
+			verbs: []string{"list"},
 			resources: metav1.APIResourceList{
 				GroupVersion: "a/v1",
 				APIResources: []metav1.APIResource{aFoo, aNoVerbs},
@@ -130,6 +132,27 @@ func TestFetchAvailableGroupResources(t *testing.T) {
 		{
 			name:      "namespaced resources",
 			namespace: "any-namespace",
+			verbs:     []string{"list"},
+			resources: metav1.APIResourceList{
+				GroupVersion: "b/v1",
+				APIResources: []metav1.APIResource{bBar},
+			},
+			expected: []GroupResource{{APIGroup: "b", APIResource: bBar}},
+		},
+		{
+			name:  "incomplete cluster resources",
+			err:   fmt.Errorf("list is incomplete"),
+			verbs: []string{"list"},
+			resources: metav1.APIResourceList{
+				GroupVersion: "a/v1",
+				APIResources: []metav1.APIResource{aFoo, aNoVerbs},
+			},
+			expected: []GroupResource{{APIGroup: "a", APIResource: aFoo}},
+		},
+		{
+			name:      "incomplete namespaced resources",
+			namespace: "any-namespace",
+			err:       fmt.Errorf("list is incomplete"),
 			verbs:     []string{"list"},
 			resources: metav1.APIResourceList{
 				GroupVersion: "b/v1",
@@ -151,7 +174,10 @@ func TestFetchAvailableGroupResources(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			fakeRbacClient := &fakeCachedDiscoveryInterface{next: test.resources}
+			fakeRbacClient := &fakeCachedDiscoveryInterface{
+				next: test.resources,
+				err:  test.err,
+			}
 
 			getDiscoveryClient = func(opts *options.RakkessOptions) (discovery.CachedDiscoveryInterface, error) {
 				return fakeRbacClient, nil
