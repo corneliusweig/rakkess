@@ -1,0 +1,58 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: access-matrix
+spec:
+  version: {{ .TagName }}
+  platforms:
+    - {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-linux.tar.gz" .TagName }}
+      bin: access-matrix
+      files:
+        - from: ./LICENSE
+          to: .
+        - from: ./access-matrix-amd64-linux
+          to: access-matrix
+      selector:
+        matchLabels:
+          os: linux
+          arch: amd64
+    - {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-darwin.tar.gz" .TagName }}
+      bin: access-matrix
+      files:
+        - from: ./LICENSE
+          to: .
+        - from: ./access-matrix-amd64-darwin
+          to: access-matrix
+      selector:
+        matchLabels:
+          os: darwin
+          arch: amd64
+    - {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-windows.zip" .TagName }}
+      bin: access-matrix.exe
+      files:
+        - from: ./LICENSE
+          to: .
+        - from: ./access-matrix-amd64-windows.exe
+          to: access-matrix.exe
+      selector:
+        matchLabels:
+          os: windows
+          arch: amd64
+  shortDescription: Show an RBAC access matrix for server resources
+  homepage: https://github.com/corneliusweig/rakkess
+  caveats: |
+      Usage:
+        kubectl access-matrix
+        kubectl access-matrix for pods
+  description: |
+      Show an access matrix for server resources
+
+      This plugin retrieves the full list of server resources, checks access for
+      the current user with the given verbs, and prints the result as a matrix.
+      This complements the usual "kubectl auth can-i" command, which works for
+      a single resource and a single verb. For example:
+       $ kubectl access-matrix
+
+      It also supports a mode which prints all subjects with access to a given
+      resource (needs read access to Roles and ClusterRoles). For example:
+       $ kubectl access-matrix for configmap
