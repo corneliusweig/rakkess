@@ -20,7 +20,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
+	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/authorization/v1"
 	apiV1 "k8s.io/apimachinery/pkg/apis/meta/v1"

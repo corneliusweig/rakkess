@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
+	"github.com/corneliusweig/rakkess/internal/constants"
 	v1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )

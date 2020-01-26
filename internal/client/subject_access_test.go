@@ -19,9 +19,9 @@ package client
 import (
 	"testing"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
+	"github.com/corneliusweig/rakkess/internal/client/result"
+	"github.com/corneliusweig/rakkess/internal/constants"
+	"github.com/corneliusweig/rakkess/internal/options"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

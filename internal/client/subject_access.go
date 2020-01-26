@@ -17,8 +17,8 @@ limitations under the License.
 package client
 
 import (
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
+	"github.com/corneliusweig/rakkess/internal/client/result"
+	"github.com/corneliusweig/rakkess/internal/options"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"

@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package rakkess
+package internal
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/printer"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/validation"
+	"github.com/corneliusweig/rakkess/internal/client"
+	"github.com/corneliusweig/rakkess/internal/options"
+	"github.com/corneliusweig/rakkess/internal/printer"
+	"github.com/corneliusweig/rakkess/internal/validation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime/schema"

@@ -22,9 +22,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
+	rakkess "github.com/corneliusweig/rakkess/internal"
+	"github.com/corneliusweig/rakkess/internal/constants"
+	"github.com/corneliusweig/rakkess/internal/options"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

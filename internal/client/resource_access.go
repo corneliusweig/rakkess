@@ -20,7 +20,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/client/result"
+	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/authorization/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
