@@ -22,7 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
+	"github.com/corneliusweig/rakkess/internal/constants"
 	"github.com/sirupsen/logrus"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/discovery"

@@ -20,7 +20,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/corneliusweig/rakkess/pkg/rakkess/options"
+	"github.com/corneliusweig/rakkess/internal/options"
 	"github.com/stretchr/testify/assert"
 )
 

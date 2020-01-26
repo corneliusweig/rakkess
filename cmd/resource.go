@@ -17,8 +17,8 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/corneliusweig/rakkess/pkg/rakkess"
-	"github.com/corneliusweig/rakkess/pkg/rakkess/constants"
+	rakkess "github.com/corneliusweig/rakkess/internal"
+	"github.com/corneliusweig/rakkess/internal/constants"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
