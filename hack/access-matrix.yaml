@@ -5,39 +5,39 @@ metadata:
 spec:
   version: {{ .TagName }}
   platforms:
-    - bin: access-matrix
-      {{addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-linux.tar.gz" .TagName }}
-      files:
-        - from: ./LICENSE
-          to: .
-        - from: ./access-matrix-amd64-linux
-          to: access-matrix
-      selector:
-        matchLabels:
-          os: linux
-          arch: amd64
-    - bin: access-matrix
-      {{addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-darwin.tar.gz" .TagName }}
-      files:
-        - from: ./LICENSE
-          to: .
-        - from: ./access-matrix-amd64-darwin
-          to: access-matrix
-      selector:
-        matchLabels:
-          os: darwin
-          arch: amd64
-    - bin: access-matrix.exe
-      {{addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-windows.zip" .TagName }}
-      files:
-        - from: ./LICENSE
-          to: .
-        - from: ./access-matrix-amd64-windows.exe
-          to: access-matrix.exe
-      selector:
-        matchLabels:
-          os: windows
-          arch: amd64
+  - bin: access-matrix
+    {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-linux.tar.gz" .TagName }}
+    files:
+      - from: ./LICENSE
+        to: .
+      - from: ./access-matrix-amd64-linux
+        to: access-matrix
+    selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+  - bin: access-matrix
+    {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-darwin.tar.gz" .TagName }}
+    files:
+      - from: ./LICENSE
+        to: .
+      - from: ./access-matrix-amd64-darwin
+        to: access-matrix
+    selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+  - bin: access-matrix.exe
+    {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-windows.zip" .TagName }}
+    files:
+      - from: ./LICENSE
+        to: .
+      - from: ./access-matrix-amd64-windows.exe
+        to: access-matrix.exe
+    selector:
+      matchLabels:
+        os: windows
+        arch: amd64
   shortDescription: Show an RBAC access matrix for server resources
   homepage: https://github.com/corneliusweig/rakkess
   caveats: |
