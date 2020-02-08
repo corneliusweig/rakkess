@@ -30,7 +30,7 @@ ASSETS     := $(BUILDDIR)/rakkess-$(GOARCH)-darwin.tar.gz $(BUILDDIR)/rakkess-$(
 ASSETSKREW := $(BUILDDIR)/access-matrix-$(GOARCH)-darwin.tar.gz $(BUILDDIR)/access-matrix-$(GOARCH)-linux.tar.gz $(BUILDDIR)/access-matrix-$(GOARCH)-windows.zip
 CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS) $(ASSETSKREW))
 
-VERSION_PACKAGE := $(REPOPATH)/pkg/rakkess/version
+VERSION_PACKAGE := $(REPOPATH)/internal/version
 
 DATE_FMT = %Y-%m-%dT%H:%M:%SZ
 ifdef SOURCE_DATE_EPOCH
