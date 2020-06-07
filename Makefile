@@ -51,6 +51,10 @@ else
   COMPRESS:=gzip --best -k -c
 endif
 
+define doUPX
+	strip $@ && upx -9q $@
+endef
+
 GO_FILES  := $(shell find . -type f -name '*.go')
 
 .PHONY: test
@@ -85,11 +89,12 @@ dev: GO_LDFLAGS := $(subst -s -w,,$(GO_LDFLAGS))
 dev:
 	go build -race -ldflags $(GO_LDFLAGS) -o rakkess main.go
 
+# TODO(corneliusweig): gox does not support the -trimpath flag, see https://github.com/mitchellh/gox/pull/138
 build-rakkess: $(GO_FILES) $(BUILDDIR)
-	gox -osarch="$(PLATFORMS)" -ldflags $(GO_LDFLAGS) -output="out/rakkess-{{.Arch}}-{{.OS}}"
+	GOFLAGS="-trimpath" gox -osarch="$(PLATFORMS)" -tags netgo -ldflags $(GO_LDFLAGS) -output="out/rakkess-{{.Arch}}-{{.OS}}"
 
 build-access-matrix: $(GO_FILES) $(BUILDDIR)
-	gox -osarch="$(PLATFORMS)" -tags accessmatrix -ldflags $(GO_LDFLAGS) -output="out/access-matrix-{{.Arch}}-{{.OS}}"
+	GOFLAGS="-trimpath" gox -osarch="$(PLATFORMS)" -tags accessmatrix,netgo -ldflags $(GO_LDFLAGS) -output="out/access-matrix-{{.Arch}}-{{.OS}}"
 
 .PHONY: lint
 lint:
@@ -131,9 +136,15 @@ clean:
 	$(RM) -r $(BUILDDIR) rakkess
 
 $(BUILDDIR)/rakkess-amd64-linux: build-rakkess
+	$(doUPX)
 $(BUILDDIR)/rakkess-amd64-darwin: build-rakkess
+	$(doUPX)
 $(BUILDDIR)/rakkess-amd64-windows.exe: build-rakkess
+	$(doUPX)
 
 $(BUILDDIR)/access-matrix-amd64-linux: build-access-matrix
+	$(doUPX)
 $(BUILDDIR)/access-matrix-amd64-darwin: build-access-matrix
+	$(doUPX)
 $(BUILDDIR)/access-matrix-amd64-windows.exe: build-access-matrix
+	$(doUPX)

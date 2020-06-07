@@ -52,6 +52,8 @@ jobs:
       if: contains(github.ref, 'tags')
       run: |
         set -euo pipefail
+        sudo apt update
+        sudo apt install -y upx
         hack/install-gox.sh
         make deploy
 
