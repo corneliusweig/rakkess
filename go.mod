@@ -9,7 +9,7 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.7
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586
 	k8s.io/api v0.17.2
