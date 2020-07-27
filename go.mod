@@ -11,11 +11,11 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0
-	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586
-	k8s.io/api v0.17.2
-	k8s.io/apimachinery v0.17.2
+	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
+	k8s.io/api v0.18.6
+	k8s.io/apimachinery v0.18.6
 	k8s.io/cli-runtime v0.17.2
-	k8s.io/client-go v0.17.2
+	k8s.io/client-go v0.18.6
 )
 
 go 1.13
