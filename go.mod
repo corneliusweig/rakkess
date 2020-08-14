@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586
 	k8s.io/api v0.17.2
-	k8s.io/apimachinery v0.17.2
+	k8s.io/apimachinery v0.18.8
 	k8s.io/cli-runtime v0.17.2
 	k8s.io/client-go v0.17.2
 )
