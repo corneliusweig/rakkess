@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Set up Go 1.13
+    - name: Set up Go 1.14
       uses: actions/setup-go@v2
       with:
-        go-version: 1.13
+        go-version: 1.14
       id: go
 
     - name: Check out code into the Go module directory
@@ -58,7 +58,7 @@ jobs:
     - name: Create release
       if: contains(github.ref, 'tags')
       id: create_release
-      uses: actions/create-release@v1.1.0
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -80,6 +80,6 @@ jobs:
 
     - name: Update new version in krew-index
       if: contains(github.ref, 'tags')
-      uses: rajatjindal/krew-release-bot@v0.0.32
+      uses: rajatjindal/krew-release-bot@v0.0.38
       with:
         krew_template_file: hack/access-matrix.yaml
