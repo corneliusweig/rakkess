@@ -17,6 +17,8 @@ limitations under the License.
 package client
 
 import (
+	"context"
+
 	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/corneliusweig/rakkess/internal/options"
 	"github.com/sirupsen/logrus"
@@ -35,7 +37,7 @@ const (
 )
 
 // GetSubjectAccess determines subjects with access to the given resource.
-func GetSubjectAccess(opts *options.RakkessOptions, resource, resourceName string) (*result.SubjectAccess, error) {
+func GetSubjectAccess(ctx context.Context, opts *options.RakkessOptions, resource, resourceName string) (*result.SubjectAccess, error) {
 	rbacClient, err := getRbacClient(opts)
 	if err != nil {
 		return nil, err
@@ -46,12 +48,12 @@ func GetSubjectAccess(opts *options.RakkessOptions, resource, resourceName strin
 
 	sa := result.NewSubjectAccess(resource, resourceName)
 
-	if err := fetchMatchingClusterRoles(rbacClient, sa); err != nil {
+	if err := fetchMatchingClusterRoles(ctx, rbacClient, sa); err != nil {
 		if !isNamespace {
 			return nil, err
 		}
 		logrus.Warnf("incomplete result: %s", err)
-	} else if err := resolveClusterRoleBindings(rbacClient, sa); err != nil {
+	} else if err := resolveClusterRoleBindings(ctx, rbacClient, sa); err != nil {
 		if !isNamespace {
 			return nil, err
 		}
@@ -63,19 +65,19 @@ func GetSubjectAccess(opts *options.RakkessOptions, resource, resourceName strin
 		return sa, nil
 	}
 
-	if err := fetchMatchingRoles(rbacClient, sa, *namespace); err != nil {
+	if err := fetchMatchingRoles(ctx, rbacClient, sa, *namespace); err != nil {
 		return nil, err
 	}
-	if err := resolveRoleBindings(rbacClient, sa, *namespace); err != nil {
+	if err := resolveRoleBindings(ctx, rbacClient, sa, *namespace); err != nil {
 		return nil, err
 	}
 
 	return sa, nil
 }
 
-func resolveRoleBindings(rbacClient clientv1.RoleBindingsGetter, sa *result.SubjectAccess, namespace string) error {
+func resolveRoleBindings(ctx context.Context, rbacClient clientv1.RoleBindingsGetter, sa *result.SubjectAccess, namespace string) error {
 	logrus.Debugf("fetching RoleBindings for namespace %s", namespace)
-	roleBindings, err := rbacClient.RoleBindings(namespace).List(metav1.ListOptions{})
+	roleBindings, err := rbacClient.RoleBindings(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -89,9 +91,9 @@ func resolveRoleBindings(rbacClient clientv1.RoleBindingsGetter, sa *result.Subj
 	return nil
 }
 
-func resolveClusterRoleBindings(rbacClient clientv1.ClusterRoleBindingsGetter, sa *result.SubjectAccess) error {
+func resolveClusterRoleBindings(ctx context.Context, rbacClient clientv1.ClusterRoleBindingsGetter, sa *result.SubjectAccess) error {
 	logrus.Debugf("fetching ClusterRoleBindings")
-	clusterRoleBindings, err := rbacClient.ClusterRoleBindings().List(metav1.ListOptions{})
+	clusterRoleBindings, err := rbacClient.ClusterRoleBindings().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -105,9 +107,9 @@ func resolveClusterRoleBindings(rbacClient clientv1.ClusterRoleBindingsGetter, s
 	return nil
 }
 
-func fetchMatchingClusterRoles(rbacClient clientv1.ClusterRolesGetter, sa *result.SubjectAccess) error {
+func fetchMatchingClusterRoles(ctx context.Context, rbacClient clientv1.ClusterRolesGetter, sa *result.SubjectAccess) error {
 	logrus.Debugf("fetching clusterRoles")
-	roleList, err := rbacClient.ClusterRoles().List(metav1.ListOptions{})
+	roleList, err := rbacClient.ClusterRoles().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -124,9 +126,9 @@ func fetchMatchingClusterRoles(rbacClient clientv1.ClusterRolesGetter, sa *resul
 	return nil
 }
 
-func fetchMatchingRoles(rbacClient clientv1.RolesGetter, sa *result.SubjectAccess, namespace string) error {
+func fetchMatchingRoles(ctx context.Context, rbacClient clientv1.RolesGetter, sa *result.SubjectAccess, namespace string) error {
 	logrus.Debugf("fetching roles for namespace %s", namespace)
-	roleList, err := rbacClient.Roles(namespace).List(metav1.ListOptions{})
+	roleList, err := rbacClient.Roles(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
