@@ -23,6 +23,7 @@ import (
 	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/authorization/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
@@ -94,7 +95,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 					},
 				}
 
-				if review, err := sar.Create(review); err != nil {
+				if review, err := sar.Create(ctx, review, metav1.CreateOptions{}); err != nil {
 					access[v] = result.AccessRequestErr
 				} else {
 					access[v] = resultFor(&review.Status)

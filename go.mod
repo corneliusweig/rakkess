@@ -14,7 +14,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
-	k8s.io/cli-runtime v0.17.2
+	k8s.io/cli-runtime v0.18.8
 	k8s.io/client-go v0.18.8
 )
 

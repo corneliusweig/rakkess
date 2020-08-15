@@ -17,6 +17,8 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+
 	rakkess "github.com/corneliusweig/rakkess/internal"
 	"github.com/corneliusweig/rakkess/internal/constants"
 	"github.com/sirupsen/logrus"
@@ -66,12 +68,15 @@ var resourceCmd = &cobra.Command{
 	Long:    constants.HelpTextMapName(rakkessSubjectLong),
 	Example: constants.HelpTextMapName(rakkessSubjectExamples),
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx, cancel := context.WithCancel(context.Background())
+		catchCtrlC(cancel)
+
 		resource := args[0]
 		var resourceName string
 		if len(args) == 2 {
 			resourceName = args[1]
 		}
-		if err := rakkess.Subject(rakkessOptions, resource, resourceName); err != nil {
+		if err := rakkess.Subject(ctx, rakkessOptions, resource, resourceName); err != nil {
 			logrus.Error(err)
 		}
 	},

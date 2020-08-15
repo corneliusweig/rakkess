@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"context"
 	"testing"
 
 	"github.com/corneliusweig/rakkess/internal/client/result"
@@ -135,6 +136,7 @@ func TestGetSubjectAccess(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
 
 			fakeRbacClient := &fake.FakeRbacV1{Fake: &k8stesting.Fake{}}
 			fakeRbacClient.Fake.AddReactor("list", "roles",
@@ -164,7 +166,7 @@ func TestGetSubjectAccess(t *testing.T) {
 					Namespace: &test.namespace,
 				},
 			}
-			sa, err := GetSubjectAccess(opts, test.resource, "")
+			sa, err := GetSubjectAccess(ctx, opts, test.resource, "")
 			assert.NoError(t, err)
 			assert.Equal(t, test.resource, sa.Resource)
 			assert.Equal(t, test.expected, sa.Get())
