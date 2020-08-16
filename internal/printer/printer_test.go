@@ -25,12 +25,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type accessResult map[string]int
+type accessResult map[string]result.Access
 
 func buildAccess() accessResult {
-	return make(map[string]int)
+	return make(map[string]result.Access)
 }
-func (a accessResult) withResult(result int, verbs ...string) accessResult {
+func (a accessResult) withResult(result result.Access, verbs ...string) accessResult {
 	for _, v := range verbs {
 		a[v] = result
 	}
@@ -42,7 +42,7 @@ func (a accessResult) allowed(verbs ...string) accessResult {
 func (a accessResult) denied(verbs ...string) accessResult {
 	return a.withResult(result.AccessDenied, verbs...)
 }
-func (a accessResult) get() map[string]int {
+func (a accessResult) get() map[string]result.Access {
 	return a
 }
 

@@ -28,7 +28,7 @@ type ResourceAccessItem struct {
 	// Name is the resource name.
 	Name string
 	// Access maps from verb to access code.
-	Access map[string]int
+	Access map[string]Access
 }
 
 // ResourceAccess holds the access result for all resources.
