@@ -67,8 +67,8 @@ func (o *RakkessOptions) GetAuthClient() (v1.SelfSubjectAccessReviewInterface, e
 		return nil, err
 	}
 
-	restConfig.QPS = 50
-	restConfig.Burst = 250
+	restConfig.QPS = 500
+	restConfig.Burst = 1000
 
 	authClient := v1.NewForConfigOrDie(restConfig)
 	return authClient.SelfSubjectAccessReviews(), nil
