@@ -57,7 +57,7 @@ func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, r
 	results.Print(w, codeConverter, requestedVerbs)
 }
 
-func humanreadableAccessCode(code int) string {
+func humanreadableAccessCode(code result.Access) string {
 	switch code {
 	case result.AccessAllowed:
 		return "✔" // ✓
@@ -72,11 +72,11 @@ func humanreadableAccessCode(code int) string {
 	}
 }
 
-func colorHumanreadableAccessCode(code int) string {
+func colorHumanreadableAccessCode(code result.Access) string {
 	return fmt.Sprintf("\xff\033[%dm\xff%s\xff\033[0m\xff", codeToColor(code), humanreadableAccessCode(code))
 }
 
-func codeToColor(code int) color {
+func codeToColor(code result.Access) color {
 	switch code {
 	case result.AccessAllowed:
 		return green
@@ -90,7 +90,7 @@ func codeToColor(code int) color {
 	return none
 }
 
-func asciiAccessCode(code int) string {
+func asciiAccessCode(code result.Access) string {
 	switch code {
 	case result.AccessAllowed:
 		return "yes"

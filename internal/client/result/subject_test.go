@@ -183,7 +183,7 @@ func TestSubjectAccess_ResolveRoleRef(t *testing.T) {
 }
 
 func TestSubjectAccess_Print(t *testing.T) {
-	yesNoConverter := func(i int) string {
+	yesNoConverter := func(i Access) string {
 		if i == AccessAllowed {
 			return "yes"
 		}

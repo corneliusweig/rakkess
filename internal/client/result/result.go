@@ -18,16 +18,18 @@ package result
 
 import "io"
 
+type Access uint8
+
 // This encodes the access of the given subject to the resource+verb combination.
 const (
-	AccessAllowed = iota
-	AccessDenied
+	AccessDenied Access = iota
+	AccessAllowed
 	AccessNotApplicable
 	AccessRequestErr
 )
 
 // CodeConverter converts an access code to a human-readable string.
-type CodeConverter func(int) string
+type CodeConverter func(Access) string
 
 // MatrixPrinter needs to be implemented by result types.
 type MatrixPrinter interface {

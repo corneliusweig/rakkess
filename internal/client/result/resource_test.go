@@ -24,8 +24,8 @@ import (
 )
 
 func TestSortResult(t *testing.T) {
-	makeResult := func(key string, value int) map[string]int {
-		result := make(map[string]int)
+	makeResult := func(key string, value Access) map[string]Access {
+		result := make(map[string]Access)
 		result[key] = value
 		return result
 	}
@@ -68,7 +68,7 @@ func TestSortResult(t *testing.T) {
 }
 
 func TestResourceAccess_Print(t *testing.T) {
-	evenYesOddNo := func(i int) string {
+	evenYesOddNo := func(i Access) string {
 		if i%2 == 0 {
 			return "yes"
 		}
@@ -85,7 +85,7 @@ func TestResourceAccess_Print(t *testing.T) {
 			items: []ResourceAccessItem{
 				{
 					Name:   "resource1",
-					Access: map[string]int{"list": 1, "get": 2, "delete": 3},
+					Access: map[string]Access{"list": 1, "get": 2, "delete": 3},
 				},
 			},
 			verbs:    []string{"list", "get", "delete"},
@@ -96,7 +96,7 @@ func TestResourceAccess_Print(t *testing.T) {
 			items: []ResourceAccessItem{
 				{
 					Name:   "resource1",
-					Access: map[string]int{"list": 1, "get": 2, "delete": 3},
+					Access: map[string]Access{"list": 1, "get": 2, "delete": 3},
 				},
 			},
 			verbs:    []string{"list"},
@@ -107,15 +107,15 @@ func TestResourceAccess_Print(t *testing.T) {
 			items: []ResourceAccessItem{
 				{
 					Name:   "resource1",
-					Access: map[string]int{"list": 1},
+					Access: map[string]Access{"list": 1},
 				},
 				{
 					Name:   "resource2",
-					Access: map[string]int{"list": 1},
+					Access: map[string]Access{"list": 1},
 				},
 				{
 					Name:   "resource3",
-					Access: map[string]int{"list": 2},
+					Access: map[string]Access{"list": 2},
 				},
 			},
 			verbs:    []string{"list"},

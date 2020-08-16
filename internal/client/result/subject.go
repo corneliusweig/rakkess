@@ -156,13 +156,11 @@ func (sa *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVe
 		}
 		fmt.Fprintf(w, "%s\t%s\t%s", subject.Name, subject.Kind, subject.Namespace)
 		for _, v := range requestedVerbs {
-			var code int
+			a := AccessDenied
 			if verbs.Has(v) {
-				code = AccessAllowed
-			} else {
-				code = AccessDenied
+				a = AccessAllowed
 			}
-			fmt.Fprintf(w, "\t%s", converter(code))
+			fmt.Fprintf(w, "\t%s", converter(a))
 		}
 		fmt.Fprint(w, "\n")
 	}
