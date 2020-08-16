@@ -32,10 +32,8 @@ import (
 // Since it needs to do a lot of requests, the SelfSubjectAccessReviewInterface needs to
 // be configured for high queries per second.
 func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) result.MatrixPrinter {
-	results := make([]result.ResourceAccessItem, 0, len(grs))
-	group := sync.WaitGroup{}
-	semaphore := make(chan struct{}, 20)
-	resultsChan := make(chan result.ResourceAccessItem)
+	mu := sync.Mutex{} // guards res
+	var res []result.ResourceAccessItem
 
 	var ns string
 	if namespace == nil {
@@ -43,20 +41,15 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 	} else {
 		ns = *namespace
 	}
+
+	wg := sync.WaitGroup{}
 	for _, gr := range grs {
-		group.Add(1)
+		wg.Add(1)
 		// copy captured variables
 		namespace := ns
 		gr := gr
-		go func(ctx context.Context, allowed chan<- result.ResourceAccessItem) {
-			defer group.Done()
-
-			// exit early, if context is done
-			select {
-			case <-ctx.Done():
-				return
-			case semaphore <- struct{}{}:
-			}
+		go func() {
+			defer wg.Done()
 
 			logrus.Debugf("Checking access for %s", gr.fullName())
 
@@ -68,16 +61,8 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 
 			allowedVerbs := sets.NewString(gr.APIResource.Verbs...)
 
-			access := make(map[string]int)
+			access := make(map[string]result.Access)
 			for _, v := range verbs {
-
-				// stop if cancelled
-				select {
-				case <-ctx.Done():
-					<-semaphore
-					return
-				default:
-				}
 
 				if !allowedVerbs.Has(v) {
 					access[v] = result.AccessNotApplicable
@@ -95,35 +80,27 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 					},
 				}
 
-				if review, err := sar.Create(ctx, review, metav1.CreateOptions{}); err != nil {
-					access[v] = result.AccessRequestErr
-				} else {
-					access[v] = resultFor(&review.Status)
+				a := result.AccessDenied
+				r, err := sar.Create(ctx, review, metav1.CreateOptions{})
+				switch {
+				case err != nil:
+					a = result.AccessRequestErr
+				case r.Status.Allowed:
+					a = result.AccessAllowed
 				}
+				access[v] = a
 			}
-			<-semaphore
-			allowed <- result.ResourceAccessItem{
+
+			mu.Lock()
+			res = append(res, result.ResourceAccessItem{
 				Name:   gr.fullName(),
 				Access: access,
-			}
-		}(ctx, resultsChan)
+			})
+			mu.Unlock()
+		}()
 	}
 
-	go func() {
-		group.Wait()
-		close(resultsChan)
-	}()
+	wg.Wait()
 
-	for gr := range resultsChan {
-		results = append(results, gr)
-	}
-
-	return result.NewResourceAccess(results)
-}
-
-func resultFor(status *v1.SubjectAccessReviewStatus) int {
-	if status.Allowed {
-		return result.AccessAllowed
-	}
-	return result.AccessDenied
+	return result.NewResourceAccess(res)
 }
