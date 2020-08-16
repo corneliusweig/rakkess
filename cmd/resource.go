@@ -39,7 +39,7 @@ matrix with verbs in the horizontal and subjects in the vertical direction.
 Note that the effective access right may differ from the shown results due to
 group membership such as 'system:unauthenticated'.
 
-More on https://github.com/corneliusweig/rakkess/blob/v0.4.4/doc/USAGE.md#usage
+More on https://github.com/corneliusweig/rakkess/blob/v0.4.5/doc/USAGE.md#usage
 `
 
 	rakkessSubjectExamples = `
