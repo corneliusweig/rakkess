@@ -52,7 +52,7 @@ else
 endif
 
 define doUPX
-	strip $@ && upx -9q $@
+	upx -9q $@
 endef
 
 GO_FILES  := $(shell find . -type f -name '*.go')
