@@ -47,7 +47,7 @@ the current user with the given verbs, and prints the result as a matrix.
 This complements the usual "kubectl auth can-i" command, which works for
 a single resource and a single verb.
 
-More on https://github.com/corneliusweig/rakkess/blob/v0.4.5/doc/USAGE.md#usage
+More on https://github.com/corneliusweig/rakkess/blob/v0.4.6/doc/USAGE.md#usage
 `
 
 	rakkessExamples = `

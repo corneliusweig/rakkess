@@ -101,7 +101,7 @@ When using the binaries for installation, also have a look at [doc/USAGE](doc/US
 
 #### Linux
 ```bash
-curl -LO https://github.com/corneliusweig/rakkess/releases/download/v0.4.5/rakkess-amd64-linux.tar.gz \
+curl -LO https://github.com/corneliusweig/rakkess/releases/download/v0.4.6/rakkess-amd64-linux.tar.gz \
   && tar xf rakkess-amd64-linux.tar.gz rakkess-amd64-linux \
   && chmod +x rakkess-amd64-linux \
   && mv -i rakkess-amd64-linux $GOPATH/bin/rakkess
@@ -109,14 +109,14 @@ curl -LO https://github.com/corneliusweig/rakkess/releases/download/v0.4.5/rakke
 
 #### OSX
 ```bash
-curl -LO https://github.com/corneliusweig/rakkess/releases/download/v0.4.5/rakkess-amd64-darwin.tar.gz \
+curl -LO https://github.com/corneliusweig/rakkess/releases/download/v0.4.6/rakkess-amd64-darwin.tar.gz \
   && tar xf rakkess-amd64-darwin.tar.gz rakkess-amd64-darwin \
   && chmod +x rakkess-amd64-darwin \
   && mv -i rakkess-amd64-darwin $GOPATH/bin/rakkess
 ```
 
 #### Windows
-[https://github.com/corneliusweig/rakkess/releases/download/v0.4.5/rakkess-windows-amd64.zip](https://github.com/corneliusweig/rakkess/releases/download/v0.4.5/rakkess-windows-amd64.zip)
+[https://github.com/corneliusweig/rakkess/releases/download/v0.4.6/rakkess-windows-amd64.zip](https://github.com/corneliusweig/rakkess/releases/download/v0.4.6/rakkess-windows-amd64.zip)
 
 ### From source
 
