@@ -137,14 +137,10 @@ clean:
 
 $(BUILDDIR)/rakkess-amd64-linux: build-rakkess
 	$(doUPX)
-$(BUILDDIR)/rakkess-amd64-darwin: build-rakkess
-	$(doUPX)
 $(BUILDDIR)/rakkess-amd64-windows.exe: build-rakkess
 	$(doUPX)
 
 $(BUILDDIR)/access-matrix-amd64-linux: build-access-matrix
-	$(doUPX)
-$(BUILDDIR)/access-matrix-amd64-darwin: build-access-matrix
 	$(doUPX)
 $(BUILDDIR)/access-matrix-amd64-windows.exe: build-access-matrix
 	$(doUPX)
