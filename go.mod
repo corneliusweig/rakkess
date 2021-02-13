@@ -9,13 +9,13 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
-	github.com/spf13/cobra v1.1.1
-	github.com/stretchr/testify v1.6.1
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	k8s.io/api v0.19.4
-	k8s.io/apimachinery v0.19.4
-	k8s.io/cli-runtime v0.19.4
-	k8s.io/client-go v0.19.4
+	github.com/spf13/cobra v1.1.3
+	github.com/stretchr/testify v1.7.0
+	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+	k8s.io/api v0.20.2
+	k8s.io/apimachinery v0.20.2
+	k8s.io/cli-runtime v0.20.2
+	k8s.io/client-go v0.20.2
 )
 
 go 1.15
