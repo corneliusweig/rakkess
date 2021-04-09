@@ -75,13 +75,13 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         # hacky glob pattern because this does not accept multiple patterns
-        file: out/{access-matrix,rakkess}-amd64-*.{tar,zip}*
+        file: out/{access-matrix,rakkess}-{amd64,arm64}-*.{tar,zip}*
         tag: ${{ github.ref }}
         overwrite: true
         file_glob: true
 
     - name: Update new version in krew-index
       if: contains(github.ref, 'tags')
-      uses: rajatjindal/krew-release-bot@v0.0.38
+      uses: rajatjindal/krew-release-bot@v0.0.39
       with:
         krew_template_file: hack/access-matrix.yaml

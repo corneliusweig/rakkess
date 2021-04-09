@@ -24,7 +24,7 @@ GOOS      ?= $(shell go env GOOS)
 GOPATH    ?= $(shell go env GOPATH)
 
 BUILDDIR   := out
-PLATFORMS  ?= darwin/amd64 windows/amd64 linux/amd64
+PLATFORMS  ?= darwin/amd64 darwin/arm64 windows/amd64 linux/amd64
 DISTFILE   := $(BUILDDIR)/$(VERSION).tar.gz
 ASSETS     := $(BUILDDIR)/rakkess-$(GOARCH)-darwin.tar.gz $(BUILDDIR)/rakkess-$(GOARCH)-linux.tar.gz $(BUILDDIR)/rakkess-$(GOARCH)-windows.zip
 ASSETSKREW := $(BUILDDIR)/access-matrix-$(GOARCH)-darwin.tar.gz $(BUILDDIR)/access-matrix-$(GOARCH)-linux.tar.gz $(BUILDDIR)/access-matrix-$(GOARCH)-windows.zip
@@ -135,12 +135,14 @@ dist: $(DISTFILE)
 clean:
 	$(RM) -r $(BUILDDIR) rakkess
 
+$(BUILDDIR)/rakkess-arm64-darwin: build-rakkess
 $(BUILDDIR)/rakkess-amd64-darwin: build-rakkess
 $(BUILDDIR)/rakkess-amd64-linux: build-rakkess
 	$(doUPX)
 $(BUILDDIR)/rakkess-amd64-windows.exe: build-rakkess
 	$(doUPX)
 
+$(BUILDDIR)/access-matrix-arm64-darwin: build-access-matrix
 $(BUILDDIR)/access-matrix-amd64-darwin: build-access-matrix
 $(BUILDDIR)/access-matrix-amd64-linux: build-access-matrix
 	$(doUPX)
