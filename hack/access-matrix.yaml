@@ -5,35 +5,46 @@ metadata:
 spec:
   version: {{ .TagName }}
   platforms:
-  - bin: access-matrix
+  - bin: access-matrix-amd64-linux
     {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-linux.tar.gz" .TagName }}
     files:
-      - from: ./LICENSE
+      - from: LICENSE
         to: .
-      - from: ./access-matrix-amd64-linux
-        to: access-matrix
+      - from: access-matrix-amd64-linux
+        to: .
     selector:
       matchLabels:
         os: linux
         arch: amd64
-  - bin: access-matrix
+  - bin: access-matrix-amd64-darwin
     {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-darwin.tar.gz" .TagName }}
     files:
-      - from: ./LICENSE
+      - from: LICENSE
         to: .
-      - from: ./access-matrix-amd64-darwin
-        to: access-matrix
+      - from: access-matrix-amd64-darwin
+        to: .
     selector:
       matchLabels:
         os: darwin
         arch: amd64
-  - bin: access-matrix.exe
+  - bin: access-matrix-arm64-darwin
+    {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-arm64-darwin.tar.gz" .TagName }}
+    files:
+      - from: LICENSE
+        to: .
+      - from: access-matrix-arm64-darwin
+        to: .
+    selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+  - bin: access-matrix-amd64-windows.exe
     {{ addURIAndSha "https://github.com/corneliusweig/rakkess/releases/download/{{ .TagName }}/access-matrix-amd64-windows.zip" .TagName }}
     files:
-      - from: ./LICENSE
+      - from: LICENSE
         to: .
-      - from: ./access-matrix-amd64-windows.exe
-        to: access-matrix.exe
+      - from: access-matrix-amd64-windows.exe
+        to: .
     selector:
       matchLabels:
         os: windows

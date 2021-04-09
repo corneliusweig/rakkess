@@ -27,7 +27,7 @@ import (
 	"io"
 	"os"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // initTerminal enables ANSI color escape sequences. On UNIX, they are always enabled.
@@ -36,7 +36,7 @@ func initTerminal(_ io.Writer) {
 
 func isTerminalImpl(w io.Writer) bool {
 	if f, ok := w.(*os.File); ok {
-		return terminal.IsTerminal(int(f.Fd()))
+		return term.IsTerminal(int(f.Fd()))
 	}
 	return false
 }
