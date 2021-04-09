@@ -123,7 +123,7 @@ curl -LO https://github.com/corneliusweig/rakkess/releases/download/v0.4.7/rakke
 #### Build on host
 
 Requirements:
- - go 1.15 or newer
+ - go 1.16 or newer
  - GNU make
  - git
 
