@@ -19,116 +19,105 @@ package printer
 import (
 	"bytes"
 	"io"
-	"strings"
 	"testing"
 
-	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/stretchr/testify/assert"
 )
 
 const HEADER = "NAME       GET  LIST\n"
 
-func parseInput(t *testing.T, in []string) result.ResourceAccess {
-	ret := make(result.ResourceAccess)
-	for _, s := range in {
-		parts := strings.Split(s, ":")
-		if len(parts) != 3 {
-			t.Errorf("parseInput got %q, want format 'name:verb1:result'", s)
-			return nil
-		}
-		name := parts[0]
-		verb := parts[1]
-		var access result.Access
-		switch parts[2] {
-		case "n/a":
-			access = result.AccessNotApplicable
-		case "no":
-			access = result.AccessDenied
-		case "ok":
-			access = result.AccessAllowed
-		case "err":
-			access = result.AccessRequestErr
-		}
-
-		r := ret[name]
-		if r == nil {
-			r = make(map[string]result.Access)
-			ret[name] = r
-		}
-		r[verb] = access
-	}
-	return ret
-}
-
 func TestPrintResults(t *testing.T) {
 	tests := []struct {
 		name      string
-		verbs     []string
-		input     []string // for example: "name:verb1,verb2"
+		p         *Printer
 		want      string
 		wantColor string
 		wantASCII string
 	}{
 		{
 			"single result, all allowed",
-			[]string{"get", "list"},
-			[]string{"resource1:get:ok", "resource1:list:ok"},
+			&Printer{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Up, Up}},
+				},
+			},
 			HEADER + "resource1  ✔    ✔\n",
 			HEADER + "resource1  \033[32m✔\033[0m    \033[32m✔\033[0m\n",
 			HEADER + "resource1  yes  yes\n",
 		},
 		{
 			"single result, all forbidden",
-			[]string{"get", "list"},
-			[]string{"resource1:get:no", "resource1:list:no"},
+			&Printer{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Down, Down}},
+				},
+			},
 			HEADER + "resource1  ✖    ✖\n",
 			HEADER + "resource1  \033[31m✖\033[0m    \033[31m✖\033[0m\n",
 			HEADER + "resource1  no   no\n",
 		},
 		{
 			"single result, all not applicable",
-			[]string{"get", "list"},
-			[]string{"resource1:get:n/a", "resource1:list:n/a"},
+			&Printer{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{None, None}},
+				},
+			},
 			HEADER + "resource1       \n",
 			HEADER + "resource1  \033[0m\033[0m     \033[0m\033[0m\n",
 			HEADER + "resource1  n/a  n/a\n",
 		},
 		{
 			"single result, all ERR",
-			[]string{"get", "list"},
-			[]string{"resource1:get:err", "resource1:list:err"},
+			&Printer{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Err, Err}},
+				},
+			},
 			HEADER + "resource1  ERR  ERR\n",
 			HEADER + "resource1  \033[35mERR\033[0m  \033[35mERR\033[0m\n",
 			HEADER + "resource1  ERR  ERR\n",
 		},
 		{
 			"single result, mixed",
-			[]string{"get", "list"},
-			[]string{"resource1:get:no", "resource1:list:ok"},
+			&Printer{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Down, Up}},
+				},
+			},
 			HEADER + "resource1  ✖    ✔\n",
 			"",
 			HEADER + "resource1  no   yes\n",
 		},
 		{
 			"many results",
-			[]string{"get"},
-			[]string{"resource1:get:no", "resource2:get:ok", "resource3:get:no"},
-			"NAME       GET\nresource1  ✖\nresource2  ✔\nresource3  ✖\n",
+			&Printer{
+				Headers: []string{"NAME", "GET"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Down}},
+					{Intro: []string{"resource2"}, Entries: []Outcome{Up}},
+					{Intro: []string{"resource3"}, Entries: []Outcome{Err}},
+				},
+			},
+			"NAME       GET\nresource1  ✖\nresource2  ✔\nresource3  ERR\n",
 			"",
-			"NAME       GET\nresource1  no\nresource2  yes\nresource3  no\n",
+			"NAME       GET\nresource1  no\nresource2  yes\nresource3  ERR\n",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			in := parseInput(t, test.input)
-
 			buf := &bytes.Buffer{}
-			PrintResults(buf, test.verbs, "icon-table", in)
+			test.p.Print(buf, "icon-table")
 			assert.Equal(t, test.want, buf.String())
 
 			buf = &bytes.Buffer{}
-			PrintResults(buf, test.verbs, "ascii-table", in)
+			test.p.Print(buf, "ascii-table")
 			assert.Equal(t, test.wantASCII, buf.String())
 		})
 	}
@@ -142,14 +131,12 @@ func TestPrintResults(t *testing.T) {
 		}()
 
 		t.Run(test.name, func(t *testing.T) {
-			in := parseInput(t, test.input)
-
 			buf := &bytes.Buffer{}
-			PrintResults(buf, test.verbs, "icon-table", in)
+			test.p.Print(buf, "icon-table")
 			assert.Equal(t, test.wantColor, buf.String())
 
 			buf = &bytes.Buffer{}
-			PrintResults(buf, test.verbs, "ascii-table", in)
+			test.p.Print(buf, "ascii-table")
 			assert.Equal(t, test.wantASCII, buf.String())
 		})
 	}

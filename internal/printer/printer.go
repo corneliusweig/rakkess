@@ -19,11 +19,9 @@ package printer
 import (
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 	"sync"
 
-	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/corneliusweig/tabwriter"
 )
 
@@ -51,7 +49,7 @@ const (
 )
 
 type Row struct {
-	Label   string
+	Intro   []string
 	Entries []Outcome
 }
 type Printer struct {
@@ -65,106 +63,90 @@ func New(headers []string) *Printer {
 	}
 }
 
-func (p *Printer) AddRow(label string, outcomes ...Outcome) {
+func (p *Printer) AddRow(intro []string, outcomes ...Outcome) {
 	row := Row{
-		Label:   label,
+		Intro:   intro,
 		Entries: outcomes,
 	}
 	p.Rows = append(p.Rows, row)
 }
 
-func (p *Printer) Print(out io.Writer, conv func(Outcome) string) {
+func (p *Printer) Print(out io.Writer, outputFormat string) {
 	once.Do(func() { initTerminal(out) })
+
+	conv := humanreadableAccessCode
+	if isTerminal(out) {
+		conv = colorHumanreadableAccessCode
+	}
+	if outputFormat == "ascii-table" {
+		conv = asciiAccessCode
+	}
+
 	w := tabwriter.NewWriter(out, 4, 8, 2, ' ', tabwriter.SmashEscape|tabwriter.StripEscape)
 	defer w.Flush()
 
 	// table header
-	for i, header := range p.Headers {
+	for i, h := range p.Headers {
 		if i == 0 {
-			fmt.Fprint(w, header)
+			fmt.Fprint(w, h)
 		} else {
-			fmt.Fprintf(w, "\t%s", strings.ToUpper(header))
+			fmt.Fprintf(w, "\t%s", h)
 		}
 	}
 	fmt.Fprint(w, "\n")
 
 	// table body
-	sort.Slice(p.Rows, func(i, j int) bool { return p.Rows[i].Label < p.Rows[j].Label })
 	for _, row := range p.Rows {
-		fmt.Fprintf(w, "%s", row.Label)
+		fmt.Fprintf(w, "%s", strings.Join(row.Intro, "\t"))
 		for _, e := range row.Entries {
-			fmt.Fprintf(w, "\t%s", conv(e))
+			fmt.Fprintf(w, "\t%s", conv(e)) // FIXME
 		}
 		fmt.Fprint(w, "\n")
 	}
 }
 
-// MatrixPrinter needs to be implemented by result types.
-type MatrixPrinter interface {
-	// Print writes the result for the requestedVerbs to w using the code converter.
-	Print(w io.Writer, converter result.CodeConverter, verbs []string)
-}
-
-// PrintResults configures the table style and delegates printing to result.MatrixPrinter.
-func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results MatrixPrinter) {
-	w := tabwriter.NewWriter(out, 4, 8, 2, ' ', tabwriter.SmashEscape|tabwriter.StripEscape)
-	defer w.Flush()
-
-	once.Do(func() { initTerminal(out) })
-
-	codeConverter := humanreadableAccessCode
-	if isTerminal(out) {
-		codeConverter = colorHumanreadableAccessCode
-	}
-	if outputFormat == "ascii-table" {
-		codeConverter = asciiAccessCode
-	}
-
-	results.Print(w, codeConverter, requestedVerbs)
-}
-
-func humanreadableAccessCode(code result.Access) string {
-	switch code {
-	case result.AccessAllowed:
-		return "✔" // ✓
-	case result.AccessDenied:
-		return "✖" // ✕
-	case result.AccessNotApplicable:
+func humanreadableAccessCode(o Outcome) string {
+	switch o {
+	case None:
 		return ""
-	case result.AccessRequestErr:
+	case Up:
+		return "✔" // ✓
+	case Down:
+		return "✖" // ✕
+	case Err:
 		return "ERR"
 	default:
 		panic("unknown access code")
 	}
 }
 
-func colorHumanreadableAccessCode(code result.Access) string {
-	return fmt.Sprintf("\xff\033[%dm\xff%s\xff\033[0m\xff", codeToColor(code), humanreadableAccessCode(code))
+func colorHumanreadableAccessCode(o Outcome) string {
+	return fmt.Sprintf("\xff\033[%dm\xff%s\xff\033[0m\xff", codeToColor(o), humanreadableAccessCode(o))
 }
 
-func codeToColor(code result.Access) color {
-	switch code {
-	case result.AccessAllowed:
-		return green
-	case result.AccessDenied:
-		return red
-	case result.AccessNotApplicable:
+func codeToColor(o Outcome) color {
+	switch o {
+	case None:
 		return none
-	case result.AccessRequestErr:
+	case Up:
+		return green
+	case Down:
+		return red
+	case Err:
 		return purple
 	}
 	return none
 }
 
-func asciiAccessCode(code result.Access) string {
-	switch code {
-	case result.AccessAllowed:
-		return "yes"
-	case result.AccessDenied:
-		return "no"
-	case result.AccessNotApplicable:
+func asciiAccessCode(o Outcome) string {
+	switch o {
+	case None:
 		return "n/a"
-	case result.AccessRequestErr:
+	case Up:
+		return "yes"
+	case Down:
+		return "no"
+	case Err:
 		return "ERR"
 	default:
 		panic("unknown access code")

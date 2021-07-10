@@ -17,17 +17,17 @@ limitations under the License.
 package result
 
 import (
-	"fmt"
-	"io"
 	"sort"
 	"strings"
+
+	"github.com/corneliusweig/rakkess/internal/printer"
 )
 
 // ResourceAccess holds the access result for all resources.
 type ResourceAccess map[string]map[string]Access
 
 // Print implements MatrixPrinter.Print. It prints a tab-separated table with a header.
-func (ra ResourceAccess) Print(w io.Writer, converter CodeConverter, requestedVerbs []string) {
+func (ra ResourceAccess) ToPrinter(verbs []string) *printer.Printer {
 	var names []string
 	for name := range ra {
 		names = append(names, name)
@@ -35,19 +35,33 @@ func (ra ResourceAccess) Print(w io.Writer, converter CodeConverter, requestedVe
 	sort.Strings(names)
 
 	// table header
-	fmt.Fprint(w, "NAME")
-	for _, v := range requestedVerbs {
-		fmt.Fprintf(w, "\t%s", strings.ToUpper(v))
+	headers := []string{"NAME"}
+	for _, v := range verbs {
+		headers = append(headers, strings.ToUpper(v))
 	}
-	fmt.Fprint(w, "\n")
+
+	p := printer.New(headers)
 
 	// table body
 	for _, name := range names {
-		fmt.Fprintf(w, "%s", name)
+		var outcomes []printer.Outcome
+
 		res := ra[name]
-		for _, v := range requestedVerbs {
-			fmt.Fprintf(w, "\t%s", converter(res[v]))
+		for _, v := range verbs {
+			var o printer.Outcome
+			switch res[v] {
+			case Denied:
+				o = printer.Down
+			case Allowed:
+				o = printer.Up
+			case NotApplicable:
+				o = printer.None
+			case RequestErr:
+				o = printer.Err
+			}
+			outcomes = append(outcomes, o)
 		}
-		fmt.Fprint(w, "\n")
+		p.AddRow([]string{name}, outcomes...)
 	}
+	return p
 }

@@ -22,7 +22,6 @@ import (
 
 	"github.com/corneliusweig/rakkess/internal/client"
 	"github.com/corneliusweig/rakkess/internal/options"
-	"github.com/corneliusweig/rakkess/internal/printer"
 	"github.com/corneliusweig/rakkess/internal/validation"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -50,7 +49,8 @@ func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 
 	namespace := opts.ConfigFlags.Namespace
 	results := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs, namespace)
-	printer.PrintResults(opts.Streams.Out, opts.Verbs, opts.OutputFormat, results)
+	p := results.ToPrinter(opts.Verbs)
+	p.Print(opts.Streams.Out, opts.OutputFormat)
 
 	if namespace == nil || *namespace == "" {
 		fmt.Fprintf(opts.Streams.Out, "No namespace given, this implies cluster scope (try -n if this is not intended)\n")
@@ -86,7 +86,8 @@ func Subject(ctx context.Context, opts *options.RakkessOptions, resource, resour
 		return nil
 	}
 
-	printer.PrintResults(opts.Streams.Out, opts.Verbs, opts.OutputFormat, subjectAccess)
+	p := subjectAccess.ToPrinter(opts.Verbs)
+	p.Print(opts.Streams.Out, opts.OutputFormat)
 
 	namespace := opts.ConfigFlags.Namespace
 	if namespace == nil || *namespace == "" {

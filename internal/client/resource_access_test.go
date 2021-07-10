@@ -71,7 +71,7 @@ func TestCheckResourceAccess(t *testing.T) {
 						Group:    "group1",
 						Verb:     "list",
 					},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 			},
 			want: []string{"resource1.group1:list->ok"},
@@ -89,15 +89,15 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "delete"},
-					result.AccessDenied,
+					result.Denied,
 				},
 			},
 			want: []string{"resource1.group1:create->ok,delete->no,list->ok"},
@@ -112,11 +112,11 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "list"},
-					result.AccessDenied,
+					result.Denied,
 				},
 			},
 			want: []string{"resource1.group1:list->ok", "resource2.group1:list->no"},
@@ -132,19 +132,19 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
-					result.AccessDenied,
+					result.Denied,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "create"},
-					result.AccessDenied,
+					result.Denied,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group2", Verb: "list"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 			},
 			want: []string{"resource1.group1:create->no,list->ok", "resource1.group2:create->n/a,list->ok", "resource2.group1:create->no,list->n/a"},
@@ -160,7 +160,7 @@ func TestCheckResourceAccess(t *testing.T) {
 
 					for _, d := range test.decisions {
 						if d.matches(sar) {
-							sar.Status.Allowed = d.decision == result.AccessAllowed
+							sar.Status.Allowed = d.decision == result.Allowed
 							return true, sar, nil
 						}
 					}
@@ -175,11 +175,11 @@ func TestCheckResourceAccess(t *testing.T) {
 				for verb, a := range access {
 					var outcome string
 					switch a {
-					case result.AccessAllowed:
+					case result.Allowed:
 						outcome = "ok"
-					case result.AccessDenied:
+					case result.Denied:
 						outcome = "no"
-					case result.AccessNotApplicable:
+					case result.NotApplicable:
 						outcome = "n/a"
 					}
 					as = append(as, verb+"->"+outcome)

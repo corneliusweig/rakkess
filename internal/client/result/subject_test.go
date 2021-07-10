@@ -17,8 +17,6 @@ limitations under the License.
 package result
 
 import (
-	"bytes"
-	"sort"
 	"testing"
 
 	"github.com/corneliusweig/rakkess/internal/constants"
@@ -133,7 +131,7 @@ func TestSubjectAccess_ResolveRoleRef(t *testing.T) {
 		Kind: "some-kind",
 	}
 	subject := "main"
-	mainSubject := toSubject(subject)
+	mainSubject := SubjectRef{Name: subject, Kind: "some-kind", Namespace: "some-ns"}
 	tests := []struct {
 		name          string
 		verbsForRole  []string
@@ -175,109 +173,17 @@ func TestSubjectAccess_ResolveRoleRef(t *testing.T) {
 				sa.roleToVerbs[r] = sets.NewString(test.verbsForRole...)
 			}
 
-			sa.ResolveRoleRef(r, makeSubjects(test.subjects))
+			subjects := make([]v1.Subject, 0, len(test.subjects))
+			for _, s := range test.subjects {
+				subjects = append(subjects, v1.Subject{
+					Name:      s,
+					Kind:      "some-kind",
+					Namespace: "some-ns",
+				})
+			}
+			sa.ResolveRoleRef(r, subjects)
 
 			assert.Equal(t, sets.NewString(test.expectedVerbs...), sa.subjectToVerbs[mainSubject])
 		})
 	}
-}
-
-func TestSubjectAccess_Print(t *testing.T) {
-	yesNoConverter := func(i Access) string {
-		if i == AccessAllowed {
-			return "yes"
-		}
-		return "no"
-	}
-	tests := []struct {
-		name          string
-		subjectAccess map[SubjectRef]sets.String
-		verbs         []string
-		expected      string
-	}{
-		{
-			name: "single row with multiple verbs",
-			subjectAccess: map[SubjectRef]sets.String{
-				{Name: "default", Kind: "service-account", Namespace: "some-ns"}: sets.NewString("list", "delete"),
-			},
-			verbs:    []string{"list", "get"},
-			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\ndefault\tservice-account\tsome-ns\tyes\tno\n",
-		},
-		{
-			name: "multiple rows with multiple verbs",
-			subjectAccess: map[SubjectRef]sets.String{
-				{Name: "c-default", Kind: "SA-c", Namespace: "ns-c"}: sets.NewString("get", "delete"),
-				{Name: "b-default", Kind: "SA-b", Namespace: "ns-b"}: sets.NewString("list", "get"),
-				{Name: "a-default", Kind: "SA-a", Namespace: "ns-a"}: sets.NewString("list", "delete"),
-			},
-			verbs:    []string{"list", "get"},
-			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\na-default\tSA-a\tns-a\tyes\tno\nb-default\tSA-b\tns-b\tyes\tyes\nc-default\tSA-c\tns-c\tno\tyes\n",
-		},
-		{
-			name: "ignore row without matches",
-			subjectAccess: map[SubjectRef]sets.String{
-				{Name: "c-default", Kind: "SA-c", Namespace: "ns-c"}: sets.NewString("get", "delete"),
-				{Name: "b-default", Kind: "SA-b", Namespace: "ns-b"}: sets.NewString("delete", "update"),
-				{Name: "a-default", Kind: "SA-a", Namespace: "ns-a"}: sets.NewString("list", "delete"),
-			},
-			verbs:    []string{"list", "get"},
-			expected: "NAME\tKIND\tSA-NAMESPACE\tLIST\tGET\na-default\tSA-a\tns-a\tyes\tno\nc-default\tSA-c\tns-c\tno\tyes\n",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			buf := &bytes.Buffer{}
-			sa := SubjectAccess{subjectToVerbs: test.subjectAccess}
-			sa.Print(buf, yesNoConverter, test.verbs)
-
-			assert.Equal(t, test.expected, buf.String())
-		})
-	}
-}
-
-func TestSortableSubjects(t *testing.T) {
-	tests := []struct {
-		name   string
-		input  []SubjectRef
-		sorted []SubjectRef
-	}{
-		{
-			name:   "two inputs",
-			input:  []SubjectRef{{Name: "b"}, {Name: "a"}},
-			sorted: []SubjectRef{{Name: "a"}, {Name: "b"}},
-		},
-		{
-			name:   "three inputs",
-			input:  []SubjectRef{{Name: "b"}, {Name: "c"}, {Name: "a"}},
-			sorted: []SubjectRef{{Name: "a"}, {Name: "b"}, {Name: "c"}},
-		},
-		{
-			name:   "fallback to kind",
-			input:  []SubjectRef{{Name: "a", Kind: "c"}, {Name: "a", Kind: "a"}, {Name: "a", Kind: "b"}},
-			sorted: []SubjectRef{{Name: "a", Kind: "a"}, {Name: "a", Kind: "b"}, {Name: "a", Kind: "c"}},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			sort.Stable(sortableSubjects(test.input))
-			assert.Equal(t, test.sorted, test.input)
-		})
-	}
-}
-
-func makeSubjects(in []string) []v1.Subject {
-	subjects := make([]v1.Subject, 0, len(in))
-	for _, s := range in {
-		subjects = append(subjects, v1.Subject{
-			Name:      s,
-			Kind:      "some-kind",
-			Namespace: "some-ns",
-		})
-	}
-	return subjects
-}
-func toSubject(name string) SubjectRef {
-	return SubjectRef{Name: name, Kind: "some-kind", Namespace: "some-ns"}
 }

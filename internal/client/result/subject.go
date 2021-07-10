@@ -17,12 +17,11 @@ limitations under the License.
 package result
 
 import (
-	"fmt"
-	"io"
 	"sort"
 	"strings"
 
 	"github.com/corneliusweig/rakkess/internal/constants"
+	"github.com/corneliusweig/rakkess/internal/printer"
 	v1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -133,54 +132,42 @@ func expand(verbs []string) []string {
 	return verbs
 }
 
-// Print implements MatrixPrinter.Print. It prints a tab-separated table with a header.
-func (sa *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVerbs []string) {
-	// table header
-	fmt.Fprint(w, "NAME\tKIND\tSA-NAMESPACE")
-	for _, v := range requestedVerbs {
-		fmt.Fprintf(w, "\t%s", strings.ToUpper(v))
-	}
-	fmt.Fprint(w, "\n")
-
+func (sa *SubjectAccess) ToPrinter(verbs []string) *printer.Printer {
 	subjects := make([]SubjectRef, 0, len(sa.subjectToVerbs))
 	for s := range sa.subjectToVerbs {
 		subjects = append(subjects, s)
 	}
-	sort.Stable(sortableSubjects(subjects))
+	sort.Slice(subjects, func(i, j int) bool {
+		comp := strings.Compare(subjects[i].Name, subjects[j].Name)
+		if comp == 0 {
+			return subjects[i].Kind < subjects[j].Kind
+		}
+		return comp < 0
+	})
+
+	headers := []string{"NAME", "KIND", "SA-NAMESPACE"}
+	for _, v := range verbs {
+		headers = append(headers, strings.ToUpper(v))
+	}
+	p := printer.New(headers)
 
 	// table body
-	for _, subject := range subjects {
-		verbs := sa.subjectToVerbs[subject]
-		if !verbs.HasAny(requestedVerbs...) {
+	for _, s := range subjects {
+		valid := sa.subjectToVerbs[s]
+		if !valid.HasAny(verbs...) {
 			continue
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s", subject.Name, subject.Kind, subject.Namespace)
-		for _, v := range requestedVerbs {
-			a := AccessDenied
-			if verbs.Has(v) {
-				a = AccessAllowed
+		var outcomes []printer.Outcome
+		for _, v := range verbs {
+			o := printer.Down
+			if valid.Has(v) {
+				o = printer.Up
 			}
-			fmt.Fprintf(w, "\t%s", converter(a))
+			outcomes = append(outcomes, o)
 		}
-		fmt.Fprint(w, "\n")
+		intro := []string{s.Name, s.Kind, s.Namespace}
+		p.AddRow(intro, outcomes...)
 	}
-}
 
-type sortableSubjects []SubjectRef
-
-func (s sortableSubjects) Len() int      { return len(s) }
-func (s sortableSubjects) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s sortableSubjects) Less(i, j int) bool {
-	ret := strings.Compare(s[i].Name, s[j].Name)
-	if ret > 0 {
-		return false
-	} else if ret == 0 {
-		ret = strings.Compare(s[i].Kind, s[j].Kind)
-		if ret > 0 {
-			return false
-		} else if ret == 0 {
-			return i < j
-		}
-	}
-	return true
+	return p
 }

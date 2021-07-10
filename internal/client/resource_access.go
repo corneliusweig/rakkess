@@ -62,7 +62,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 			access := make(map[string]result.Access)
 			for _, v := range verbs {
 				if !allowedVerbs.Has(v) {
-					access[v] = result.AccessNotApplicable
+					access[v] = result.NotApplicable
 					continue
 				}
 
@@ -81,9 +81,9 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 				resp, err := sar.Create(ctx, &req, metav1.CreateOptions{})
 				switch {
 				case err != nil:
-					a = result.AccessRequestErr
+					a = result.RequestErr
 				case resp.Status.Allowed:
-					a = result.AccessAllowed
+					a = result.Allowed
 				}
 				access[v] = a
 			}
