@@ -21,8 +21,8 @@ import (
 
 	rakkess "github.com/corneliusweig/rakkess/internal"
 	"github.com/corneliusweig/rakkess/internal/constants"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -77,7 +77,7 @@ var resourceCmd = &cobra.Command{
 			resourceName = args[1]
 		}
 		if err := rakkess.Subject(ctx, rakkessOptions, resource, resourceName); err != nil {
-			logrus.Error(err)
+			klog.Error(err)
 		}
 	},
 }

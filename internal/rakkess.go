@@ -25,8 +25,8 @@ import (
 	"github.com/corneliusweig/rakkess/internal/printer"
 	"github.com/corneliusweig/rakkess/internal/validation"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog/v2"
 )
 
 // Resource determines the access right of the current (or impersonated) user
@@ -41,7 +41,7 @@ func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 	if err != nil {
 		return errors.Wrap(err, "fetch available group resources")
 	}
-	logrus.Debug(grs)
+	klog.V(2).Info(grs)
 
 	authClient, err := opts.GetAuthClient()
 	if err != nil {
@@ -82,7 +82,7 @@ func Subject(ctx context.Context, opts *options.RakkessOptions, resource, resour
 	}
 
 	if subjectAccess.Empty() {
-		logrus.Warnf("No subjects with access found. This most likely means that you have insufficient rights to review authorization.")
+		klog.Warningf("No subjects with access found. This most likely means that you have insufficient rights to review authorization.")
 		return nil
 	}
 

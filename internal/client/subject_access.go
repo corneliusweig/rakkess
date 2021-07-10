@@ -21,9 +21,9 @@ import (
 
 	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/corneliusweig/rakkess/internal/options"
-	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -52,16 +52,16 @@ func GetSubjectAccess(ctx context.Context, opts *options.RakkessOptions, resourc
 		if !isNamespace {
 			return nil, err
 		}
-		logrus.Warnf("incomplete result: %s", err)
+		klog.Warningf("incomplete result: %s", err)
 	} else if err := resolveClusterRoleBindings(ctx, rbacClient, sa); err != nil {
 		if !isNamespace {
 			return nil, err
 		}
-		logrus.Warnf("incomplete result: %s", err)
+		klog.Warningf("incomplete result: %s", err)
 	}
 
 	if !isNamespace {
-		logrus.Debugf("Skipping roles and rolebindings because namespace is missing")
+		klog.V(2).Infof("Skipping roles and rolebindings because namespace is missing")
 		return sa, nil
 	}
 
@@ -76,7 +76,7 @@ func GetSubjectAccess(ctx context.Context, opts *options.RakkessOptions, resourc
 }
 
 func resolveRoleBindings(ctx context.Context, rbacClient clientv1.RoleBindingsGetter, sa *result.SubjectAccess, namespace string) error {
-	logrus.Debugf("fetching RoleBindings for namespace %s", namespace)
+	klog.V(2).Infof("fetching RoleBindings for namespace %s", namespace)
 	roleBindings, err := rbacClient.RoleBindings(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func resolveRoleBindings(ctx context.Context, rbacClient clientv1.RoleBindingsGe
 }
 
 func resolveClusterRoleBindings(ctx context.Context, rbacClient clientv1.ClusterRoleBindingsGetter, sa *result.SubjectAccess) error {
-	logrus.Debugf("fetching ClusterRoleBindings")
+	klog.V(2).Infof("fetching ClusterRoleBindings")
 	clusterRoleBindings, err := rbacClient.ClusterRoleBindings().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -108,7 +108,7 @@ func resolveClusterRoleBindings(ctx context.Context, rbacClient clientv1.Cluster
 }
 
 func fetchMatchingClusterRoles(ctx context.Context, rbacClient clientv1.ClusterRolesGetter, sa *result.SubjectAccess) error {
-	logrus.Debugf("fetching clusterRoles")
+	klog.V(2).Infof("fetching clusterRoles")
 	roleList, err := rbacClient.ClusterRoles().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func fetchMatchingClusterRoles(ctx context.Context, rbacClient clientv1.ClusterR
 }
 
 func fetchMatchingRoles(ctx context.Context, rbacClient clientv1.RolesGetter, sa *result.SubjectAccess, namespace string) error {
-	logrus.Debugf("fetching roles for namespace %s", namespace)
+	klog.V(2).Infof("fetching roles for namespace %s", namespace)
 	roleList, err := rbacClient.Roles(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
