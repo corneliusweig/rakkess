@@ -27,7 +27,7 @@ import (
 type ResourceAccess map[string]map[string]Access
 
 // Print implements MatrixPrinter.Print. It prints a tab-separated table with a header.
-func (ra ResourceAccess) ToPrinter(verbs []string) *printer.Printer {
+func (ra ResourceAccess) Table(verbs []string) *printer.Table {
 	var names []string
 	for name := range ra {
 		names = append(names, name)
@@ -40,7 +40,7 @@ func (ra ResourceAccess) ToPrinter(verbs []string) *printer.Printer {
 		headers = append(headers, strings.ToUpper(v))
 	}
 
-	p := printer.New(headers)
+	p := printer.TableWithHeaders(headers)
 
 	// table body
 	for _, name := range names {

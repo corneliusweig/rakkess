@@ -49,8 +49,8 @@ func Resource(ctx context.Context, opts *options.RakkessOptions) error {
 
 	namespace := opts.ConfigFlags.Namespace
 	results := client.CheckResourceAccess(ctx, authClient, grs, opts.Verbs, namespace)
-	p := results.ToPrinter(opts.Verbs)
-	p.Print(opts.Streams.Out, opts.OutputFormat)
+	t := results.Table(opts.Verbs)
+	t.Render(opts.Streams.Out, opts.OutputFormat)
 
 	if namespace == nil || *namespace == "" {
 		fmt.Fprintf(opts.Streams.Out, "No namespace given, this implies cluster scope (try -n if this is not intended)\n")
@@ -86,8 +86,8 @@ func Subject(ctx context.Context, opts *options.RakkessOptions, resource, resour
 		return nil
 	}
 
-	p := subjectAccess.ToPrinter(opts.Verbs)
-	p.Print(opts.Streams.Out, opts.OutputFormat)
+	t := subjectAccess.Table(opts.Verbs)
+	t.Render(opts.Streams.Out, opts.OutputFormat)
 
 	namespace := opts.ConfigFlags.Namespace
 	if namespace == nil || *namespace == "" {

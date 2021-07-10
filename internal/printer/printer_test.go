@@ -29,14 +29,14 @@ const HEADER = "NAME       GET  LIST\n"
 func TestPrintResults(t *testing.T) {
 	tests := []struct {
 		name      string
-		p         *Printer
+		table     *Table
 		want      string
 		wantColor string
 		wantASCII string
 	}{
 		{
 			"single result, all allowed",
-			&Printer{
+			&Table{
 				Headers: []string{"NAME", "GET", "LIST"},
 				Rows: []Row{
 					{Intro: []string{"resource1"}, Entries: []Outcome{Up, Up}},
@@ -48,7 +48,7 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"single result, all forbidden",
-			&Printer{
+			&Table{
 				Headers: []string{"NAME", "GET", "LIST"},
 				Rows: []Row{
 					{Intro: []string{"resource1"}, Entries: []Outcome{Down, Down}},
@@ -60,7 +60,7 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"single result, all not applicable",
-			&Printer{
+			&Table{
 				Headers: []string{"NAME", "GET", "LIST"},
 				Rows: []Row{
 					{Intro: []string{"resource1"}, Entries: []Outcome{None, None}},
@@ -72,7 +72,7 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"single result, all ERR",
-			&Printer{
+			&Table{
 				Headers: []string{"NAME", "GET", "LIST"},
 				Rows: []Row{
 					{Intro: []string{"resource1"}, Entries: []Outcome{Err, Err}},
@@ -84,7 +84,7 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"single result, mixed",
-			&Printer{
+			&Table{
 				Headers: []string{"NAME", "GET", "LIST"},
 				Rows: []Row{
 					{Intro: []string{"resource1"}, Entries: []Outcome{Down, Up}},
@@ -96,7 +96,7 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"many results",
-			&Printer{
+			&Table{
 				Headers: []string{"NAME", "GET"},
 				Rows: []Row{
 					{Intro: []string{"resource1"}, Entries: []Outcome{Down}},
@@ -110,19 +110,19 @@ func TestPrintResults(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
-			test.p.Print(buf, "icon-table")
-			assert.Equal(t, test.want, buf.String())
+			tc.table.Render(buf, "icon-table")
+			assert.Equal(t, tc.want, buf.String())
 
 			buf = &bytes.Buffer{}
-			test.p.Print(buf, "ascii-table")
-			assert.Equal(t, test.wantASCII, buf.String())
+			tc.table.Render(buf, "ascii-table")
+			assert.Equal(t, tc.wantASCII, buf.String())
 		})
 	}
 
-	for _, test := range tests[0:4] {
+	for _, tc := range tests[0:4] {
 		isTerminal = func(w io.Writer) bool {
 			return true
 		}
@@ -130,14 +130,14 @@ func TestPrintResults(t *testing.T) {
 			isTerminal = isTerminalImpl
 		}()
 
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
-			test.p.Print(buf, "icon-table")
-			assert.Equal(t, test.wantColor, buf.String())
+			tc.table.Render(buf, "icon-table")
+			assert.Equal(t, tc.wantColor, buf.String())
 
 			buf = &bytes.Buffer{}
-			test.p.Print(buf, "ascii-table")
-			assert.Equal(t, test.wantASCII, buf.String())
+			tc.table.Render(buf, "ascii-table")
+			assert.Equal(t, tc.wantASCII, buf.String())
 		})
 	}
 }

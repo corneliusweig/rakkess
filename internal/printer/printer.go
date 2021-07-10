@@ -52,18 +52,18 @@ type Row struct {
 	Intro   []string
 	Entries []Outcome
 }
-type Printer struct {
+type Table struct {
 	Headers []string
 	Rows    []Row
 }
 
-func New(headers []string) *Printer {
-	return &Printer{
+func TableWithHeaders(headers []string) *Table {
+	return &Table{
 		Headers: headers,
 	}
 }
 
-func (p *Printer) AddRow(intro []string, outcomes ...Outcome) {
+func (p *Table) AddRow(intro []string, outcomes ...Outcome) {
 	row := Row{
 		Intro:   intro,
 		Entries: outcomes,
@@ -71,7 +71,7 @@ func (p *Printer) AddRow(intro []string, outcomes ...Outcome) {
 	p.Rows = append(p.Rows, row)
 }
 
-func (p *Printer) Print(out io.Writer, outputFormat string) {
+func (p *Table) Render(out io.Writer, outputFormat string) {
 	once.Do(func() { initTerminal(out) })
 
 	conv := humanreadableAccessCode

@@ -132,7 +132,7 @@ func expand(verbs []string) []string {
 	return verbs
 }
 
-func (sa *SubjectAccess) ToPrinter(verbs []string) *printer.Printer {
+func (sa *SubjectAccess) Table(verbs []string) *printer.Table {
 	subjects := make([]SubjectRef, 0, len(sa.subjectToVerbs))
 	for s := range sa.subjectToVerbs {
 		subjects = append(subjects, s)
@@ -149,7 +149,7 @@ func (sa *SubjectAccess) ToPrinter(verbs []string) *printer.Printer {
 	for _, v := range verbs {
 		headers = append(headers, strings.ToUpper(v))
 	}
-	p := printer.New(headers)
+	p := printer.TableWithHeaders(headers)
 
 	// table body
 	for _, s := range subjects {
