@@ -19,6 +19,8 @@ package printer
 import (
 	"fmt"
 	"io"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/corneliusweig/rakkess/internal/client/result"
@@ -36,8 +38,66 @@ const (
 
 var (
 	isTerminal = isTerminalImpl
-	terminit   sync.Once
+	once       sync.Once
 )
+
+type Outcome uint8
+
+const (
+	None Outcome = iota
+	Up
+	Down
+	Err
+)
+
+type Row struct {
+	Label   string
+	Entries []Outcome
+}
+type Printer struct {
+	Headers []string
+	Rows    []Row
+}
+
+func New(headers []string) *Printer {
+	return &Printer{
+		Headers: headers,
+	}
+}
+
+func (p *Printer) AddRow(label string, outcomes ...Outcome) {
+	row := Row{
+		Label:   label,
+		Entries: outcomes,
+	}
+	p.Rows = append(p.Rows, row)
+}
+
+func (p *Printer) Print(out io.Writer, conv func(Outcome) string) {
+	once.Do(func() { initTerminal(out) })
+	w := tabwriter.NewWriter(out, 4, 8, 2, ' ', tabwriter.SmashEscape|tabwriter.StripEscape)
+	defer w.Flush()
+
+	// table header
+	for i, header := range p.Headers {
+		if i == 0 {
+			fmt.Fprint(w, header)
+		} else {
+			fmt.Fprintf(w, "\t%s", strings.ToUpper(header))
+		}
+	}
+	fmt.Fprint(w, "\n")
+
+	// table body
+	sort.Slice(p.Rows, func(i, j int) bool { return p.Rows[i].Label < p.Rows[j].Label })
+	for _, row := range p.Rows {
+		fmt.Fprintf(w, "%s", row.Label)
+		for _, e := range row.Entries {
+			fmt.Fprintf(w, "\t%s", conv(e))
+		}
+		fmt.Fprint(w, "\n")
+	}
+}
 
 // MatrixPrinter needs to be implemented by result types.
 type MatrixPrinter interface {
@@ -50,7 +110,7 @@ func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, r
 	w := tabwriter.NewWriter(out, 4, 8, 2, ' ', tabwriter.SmashEscape|tabwriter.StripEscape)
 	defer w.Flush()
 
-	terminit.Do(func() { initTerminal(out) })
+	once.Do(func() { initTerminal(out) })
 
 	codeConverter := humanreadableAccessCode
 	if isTerminal(out) {
