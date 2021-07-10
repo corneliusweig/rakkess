@@ -31,7 +31,6 @@ import (
 
 var (
 	rakkessOptions = options.NewRakkessOptions()
-	v              string
 )
 
 const (
