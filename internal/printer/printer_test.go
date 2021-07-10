@@ -19,48 +19,60 @@ package printer
 import (
 	"bytes"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/stretchr/testify/assert"
 )
 
-type accessResult map[string]result.Access
-
-func buildAccess() accessResult {
-	return make(map[string]result.Access)
-}
-func (a accessResult) withResult(result result.Access, verbs ...string) accessResult {
-	for _, v := range verbs {
-		a[v] = result
-	}
-	return a
-}
-func (a accessResult) allowed(verbs ...string) accessResult {
-	return a.withResult(result.AccessAllowed, verbs...)
-}
-func (a accessResult) denied(verbs ...string) accessResult {
-	return a.withResult(result.AccessDenied, verbs...)
-}
-func (a accessResult) get() map[string]result.Access {
-	return a
-}
-
 const HEADER = "NAME       GET  LIST\n"
+
+func parseInput(t *testing.T, in []string) result.ResourceAccess {
+	ret := make(result.ResourceAccess)
+	for _, s := range in {
+		parts := strings.Split(s, ":")
+		if len(parts) != 3 {
+			t.Errorf("parseInput got %q, want format 'name:verb1:result'", s)
+			return nil
+		}
+		name := parts[0]
+		verb := parts[1]
+		var access result.Access
+		switch parts[2] {
+		case "n/a":
+			access = result.AccessNotApplicable
+		case "no":
+			access = result.AccessDenied
+		case "ok":
+			access = result.AccessAllowed
+		case "err":
+			access = result.AccessRequestErr
+		}
+
+		r := ret[name]
+		if r == nil {
+			r = make(map[string]result.Access)
+			ret[name] = r
+		}
+		r[verb] = access
+	}
+	return ret
+}
 
 func TestPrintResults(t *testing.T) {
 	tests := []struct {
-		name          string
-		verbs         []string
-		given         result.ResourceAccess
-		expected      string
-		expectedColor string
-		expectedASCII string
+		name      string
+		verbs     []string
+		input     []string // for example: "name:verb1,verb2"
+		want      string
+		wantColor string
+		wantASCII string
 	}{
 		{
 			"single result, all allowed",
 			[]string{"get", "list"},
-			[]result.ResourceAccessItem{{Name: "resource1", Access: buildAccess().allowed("get", "list").get()}},
+			[]string{"resource1:get:ok", "resource1:list:ok"},
 			HEADER + "resource1  ✔    ✔\n",
 			HEADER + "resource1  \033[32m✔\033[0m    \033[32m✔\033[0m\n",
 			HEADER + "resource1  yes  yes\n",
@@ -68,9 +80,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all forbidden",
 			[]string{"get", "list"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().denied("get", "list").get()},
-			},
+			[]string{"resource1:get:no", "resource1:list:no"},
 			HEADER + "resource1  ✖    ✖\n",
 			HEADER + "resource1  \033[31m✖\033[0m    \033[31m✖\033[0m\n",
 			HEADER + "resource1  no   no\n",
@@ -78,9 +88,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all not applicable",
 			[]string{"get", "list"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().withResult(result.AccessNotApplicable, "get", "list").get()},
-			},
+			[]string{"resource1:get:n/a", "resource1:list:n/a"},
 			HEADER + "resource1       \n",
 			HEADER + "resource1  \033[0m\033[0m     \033[0m\033[0m\n",
 			HEADER + "resource1  n/a  n/a\n",
@@ -88,9 +96,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, all ERR",
 			[]string{"get", "list"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().withResult(result.AccessRequestErr, "get", "list").get()},
-			},
+			[]string{"resource1:get:err", "resource1:list:err"},
 			HEADER + "resource1  ERR  ERR\n",
 			HEADER + "resource1  \033[35mERR\033[0m  \033[35mERR\033[0m\n",
 			HEADER + "resource1  ERR  ERR\n",
@@ -98,9 +104,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"single result, mixed",
 			[]string{"get", "list"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().allowed("list").denied("get").get()},
-			},
+			[]string{"resource1:get:no", "resource1:list:ok"},
 			HEADER + "resource1  ✖    ✔\n",
 			"",
 			HEADER + "resource1  no   yes\n",
@@ -108,11 +112,7 @@ func TestPrintResults(t *testing.T) {
 		{
 			"many results",
 			[]string{"get"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().denied("get").get()},
-				{Name: "resource2", Access: buildAccess().allowed("get").get()},
-				{Name: "resource3", Access: buildAccess().denied("get").get()},
-			},
+			[]string{"resource1:get:no", "resource2:get:ok", "resource3:get:no"},
 			"NAME       GET\nresource1  ✖\nresource2  ✔\nresource3  ✖\n",
 			"",
 			"NAME       GET\nresource1  no\nresource2  yes\nresource3  no\n",
@@ -121,17 +121,15 @@ func TestPrintResults(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			in := parseInput(t, test.input)
+
 			buf := &bytes.Buffer{}
-
-			PrintResults(buf, test.verbs, "icon-table", test.given)
-
-			assert.Equal(t, test.expected, buf.String())
+			PrintResults(buf, test.verbs, "icon-table", in)
+			assert.Equal(t, test.want, buf.String())
 
 			buf = &bytes.Buffer{}
-
-			PrintResults(buf, test.verbs, "ascii-table", test.given)
-
-			assert.Equal(t, test.expectedASCII, buf.String())
+			PrintResults(buf, test.verbs, "ascii-table", in)
+			assert.Equal(t, test.wantASCII, buf.String())
 		})
 	}
 
@@ -144,17 +142,15 @@ func TestPrintResults(t *testing.T) {
 		}()
 
 		t.Run(test.name, func(t *testing.T) {
+			in := parseInput(t, test.input)
+
 			buf := &bytes.Buffer{}
-
-			PrintResults(buf, test.verbs, "icon-table", test.given)
-
-			assert.Equal(t, test.expectedColor, buf.String())
+			PrintResults(buf, test.verbs, "icon-table", in)
+			assert.Equal(t, test.wantColor, buf.String())
 
 			buf = &bytes.Buffer{}
-
-			PrintResults(buf, test.verbs, "ascii-table", test.given)
-
-			assert.Equal(t, test.expectedASCII, buf.String())
+			PrintResults(buf, test.verbs, "ascii-table", in)
+			assert.Equal(t, test.wantASCII, buf.String())
 		})
 	}
 }

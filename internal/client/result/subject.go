@@ -44,37 +44,37 @@ type SubjectAccess struct {
 	Resource string
 	// ResourceName is the name of the kubernetes resource instance of this query.
 	ResourceName string
-	// roles holds all rule data concerning this resource and is extracted from Roles and ClusterRoles.
-	roles map[RoleRef]sets.String
-	// subjectAccess holds all subject access data for this resource and is extracted from RoleBindings and ClusterRoleBindings.
-	subjectAccess map[SubjectRef]sets.String
+	// roleToVerbs holds all rule data concerning this resource and is extracted from Roles and ClusterRoles.
+	roleToVerbs map[RoleRef]sets.String
+	// subjectToVerbs holds all subject access data for this resource and is extracted from RoleBindings and ClusterRoleBindings.
+	subjectToVerbs map[SubjectRef]sets.String
 }
 
 // NewSubjectAccess creates a new SubjectAccess with initialized fields.
 func NewSubjectAccess(resource, resourceName string) *SubjectAccess {
 	return &SubjectAccess{
-		Resource:      resource,
-		ResourceName:  resourceName,
-		roles:         make(map[RoleRef]sets.String),
-		subjectAccess: make(map[SubjectRef]sets.String),
+		Resource:       resource,
+		ResourceName:   resourceName,
+		roleToVerbs:    make(map[RoleRef]sets.String),
+		subjectToVerbs: make(map[SubjectRef]sets.String),
 	}
 }
 
 // Get provides access to the actual result (for testing).
 func (sa *SubjectAccess) Get() map[SubjectRef]sets.String {
-	return sa.subjectAccess
+	return sa.subjectToVerbs
 }
 
 // Empty checks if any subjects with access were found.
 func (sa *SubjectAccess) Empty() bool {
-	return len(sa.subjectAccess) == 0
+	return len(sa.subjectToVerbs) == 0
 }
 
 // ResolveRoleRef takes a RoleRef and a list of subjects and stores the access
 // rights of the given role for each subject. The RoleRef and subjects usually
 // come from a (Cluster)RoleBinding.
 func (sa *SubjectAccess) ResolveRoleRef(r RoleRef, subjects []v1.Subject) {
-	verbsForRole, ok := sa.roles[r]
+	verbsForRole, ok := sa.roleToVerbs[r]
 	if !ok {
 		return
 	}
@@ -84,10 +84,10 @@ func (sa *SubjectAccess) ResolveRoleRef(r RoleRef, subjects []v1.Subject) {
 			Kind:      subject.Kind,
 			Namespace: subject.Namespace,
 		}
-		if verbs, ok := sa.subjectAccess[s]; ok {
-			sa.subjectAccess[s] = verbs.Union(verbsForRole)
+		if verbs, ok := sa.subjectToVerbs[s]; ok {
+			sa.subjectToVerbs[s] = verbs.Union(verbsForRole)
 		} else {
-			sa.subjectAccess[s] = verbsForRole
+			sa.subjectToVerbs[s] = verbsForRole
 		}
 	}
 }
@@ -95,18 +95,18 @@ func (sa *SubjectAccess) ResolveRoleRef(r RoleRef, subjects []v1.Subject) {
 // MatchRules takes a RoleRef and a PolicyRule and adds the rule verbs to the
 // allowed verbs for the RoleRef, if the sa.resource matches the rule.
 // The RoleRef and rule usually come from a (Cluster)Role.
-func (sa *SubjectAccess) MatchRules(r RoleRef, rule v1.PolicyRule) {
+func (sa *SubjectAccess) MatchRules(ref RoleRef, rule v1.PolicyRule) {
 	if len(rule.ResourceNames) > 0 && !includes(rule.ResourceNames, sa.ResourceName) {
 		return
 	}
 
-	for _, resource := range rule.Resources {
-		if resource == v1.ResourceAll || resource == sa.Resource {
-			expandedVerbs := expandVerbs(rule.Verbs)
-			if verbs, ok := sa.roles[r]; ok {
-				sa.roles[r] = sets.NewString(expandedVerbs...).Union(verbs)
+	for _, r := range rule.Resources {
+		if r == v1.ResourceAll || r == sa.Resource {
+			expandedVerbs := expand(rule.Verbs)
+			if verbs, ok := sa.roleToVerbs[ref]; ok {
+				sa.roleToVerbs[ref] = sets.NewString(expandedVerbs...).Union(verbs)
 			} else {
-				sa.roles[r] = sets.NewString(expandedVerbs...)
+				sa.roleToVerbs[ref] = sets.NewString(expandedVerbs...)
 			}
 		}
 	}
@@ -124,7 +124,7 @@ func includes(coll []string, x string) bool {
 	return false
 }
 
-func expandVerbs(verbs []string) []string {
+func expand(verbs []string) []string {
 	for _, verb := range verbs {
 		if verb == v1.VerbAll {
 			return constants.ValidVerbs
@@ -142,15 +142,15 @@ func (sa *SubjectAccess) Print(w io.Writer, converter CodeConverter, requestedVe
 	}
 	fmt.Fprint(w, "\n")
 
-	subjects := make([]SubjectRef, 0, len(sa.subjectAccess))
-	for s := range sa.subjectAccess {
+	subjects := make([]SubjectRef, 0, len(sa.subjectToVerbs))
+	for s := range sa.subjectToVerbs {
 		subjects = append(subjects, s)
 	}
 	sort.Stable(sortableSubjects(subjects))
 
 	// table body
 	for _, subject := range subjects {
-		verbs := sa.subjectAccess[subject]
+		verbs := sa.subjectToVerbs[subject]
 		if !verbs.HasAny(requestedVerbs...) {
 			continue
 		}
