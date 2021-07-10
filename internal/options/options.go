@@ -23,10 +23,10 @@ import (
 	"strings"
 
 	"github.com/corneliusweig/rakkess/internal/constants"
-	"github.com/sirupsen/logrus"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/discovery"
 	v1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	"k8s.io/klog/v2"
 )
 
 // RakkessOptions holds all user configuration options.
@@ -53,7 +53,7 @@ func NewRakkessOptions() *RakkessOptions {
 // Sets up options with in-memory buffers as in- and output-streams
 func NewTestRakkessOptions() (*RakkessOptions, *bytes.Buffer, *bytes.Buffer, *bytes.Buffer) {
 	iostreams, in, out, errout := genericclioptions.NewTestIOStreams()
-	logrus.SetOutput(errout)
+	klog.SetOutput(errout)
 	return &RakkessOptions{
 		ConfigFlags: genericclioptions.NewConfigFlags(true),
 		Streams:     &iostreams,

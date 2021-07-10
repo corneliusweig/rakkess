@@ -18,16 +18,15 @@ package cmd
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"io"
 	"strings"
 
 	rakkess "github.com/corneliusweig/rakkess/internal"
 	"github.com/corneliusweig/rakkess/internal/constants"
 	"github.com/corneliusweig/rakkess/internal/options"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -80,7 +79,7 @@ var rootCmd = &cobra.Command{
 		catchCtrlC(cancel)
 
 		if err := rakkess.Resource(ctx, rakkessOptions); err != nil {
-			logrus.Error(err)
+			klog.Error(err)
 		}
 	},
 }
@@ -93,14 +92,14 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&v, constants.FlagVerbosity, "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
+	klog.InitFlags(flag.CommandLine)
+	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
 	AddRakkessFlags(rootCmd)
 	rootCmd.Flags().StringVar(&rakkessOptions.AsServiceAccount, constants.FlagServiceAccount, "", "similar to --as, but impersonate as service-account. The argument must be qualified <namespace>:<sa-name> or be combined with the --namespace option.")
 
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		rakkessOptions.ExpandVerbs()
-		return SetUpLogs(rakkessOptions.Streams.ErrOut, v)
 	}
 	rootCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		return rakkessOptions.ExpandServiceAccount()
@@ -113,16 +112,4 @@ func AddRakkessFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&rakkessOptions.OutputFormat, constants.FlagOutput, "o", "icon-table", fmt.Sprintf("output format out of (%s)", strings.Join(constants.ValidOutputFormats, ", ")))
 
 	rakkessOptions.ConfigFlags.AddFlags(cmd.Flags())
-}
-
-// SetUpLogs configures the loglevel and output writer for logs.
-func SetUpLogs(out io.Writer, level string) error {
-	logrus.SetOutput(out)
-	lvl, err := logrus.ParseLevel(level)
-	if err != nil {
-		return errors.Wrap(err, "parsing log level")
-	}
-	logrus.SetLevel(lvl)
-	logrus.Debugf("Set log-level to %s", level)
-	return nil
 }

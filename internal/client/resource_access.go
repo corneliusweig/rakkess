@@ -21,11 +21,11 @@ import (
 	"sync"
 
 	"github.com/corneliusweig/rakkess/internal/client/result"
-	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	"k8s.io/klog/v2"
 )
 
 // CheckResourceAccess determines the access rights for the given GroupResources and verbs.
@@ -51,7 +51,7 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 		go func() {
 			defer wg.Done()
 
-			logrus.Debugf("Checking access for %s", gr.fullName())
+			klog.V(2).Infof("Checking access for %s", gr.fullName())
 
 			// This seems to be a bug in kubernetes. If namespace is set for non-namespaced
 			// resources, the access is reported as "allowed", but in fact it is forbidden.

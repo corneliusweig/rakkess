@@ -16,10 +16,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// NOTICE: This implementation comes from logrus, unfortunately logrus
+// NOTICE: This implementation comes from klog, unfortunately logrus
 // does not expose a public interface we can use to call it.
-//   https://github.com/sirupsen/logrus/blob/master/terminal_check_notappengine.go
-//   https://github.com/sirupsen/logrus/blob/master/terminal_windows.go
+//   https://k8s.io/klog/v2/blob/master/terminal_check_notappengine.go
+//   https://k8s.io/klog/v2/blob/master/terminal_windows.go
 
 package printer
 

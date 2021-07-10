@@ -16,13 +16,6 @@ limitations under the License.
 
 package constants
 
-import "github.com/sirupsen/logrus"
-
-const (
-	// DefaultLogLevel is set to warn by default.
-	DefaultLogLevel = logrus.WarnLevel
-)
-
 // Common or shared flags
 const (
 	FlagVerbs          = "verbs"

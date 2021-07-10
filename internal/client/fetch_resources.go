@@ -21,10 +21,10 @@ import (
 
 	"github.com/corneliusweig/rakkess/internal/options"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -67,7 +67,7 @@ func FetchAvailableGroupResources(opts *options.RakkessOptions) ([]GroupResource
 		if resources == nil {
 			return nil, errors.Wrap(err, "get preferred resources")
 		}
-		logrus.Warnf("Could not fetch full list of resources, result will be incomplete: %s", err)
+		klog.Warningf("Could not fetch full list of resources, result will be incomplete: %s", err)
 	}
 
 	var grs []GroupResource
@@ -77,7 +77,7 @@ func FetchAvailableGroupResources(opts *options.RakkessOptions) ([]GroupResource
 		}
 		gv, err := schema.ParseGroupVersion(list.GroupVersion)
 		if err != nil {
-			logrus.Warnf("Cannot parse groupVersion: %s", err)
+			klog.Warningf("Cannot parse groupVersion: %s", err)
 			continue
 		}
 		for _, r := range list.APIResources {

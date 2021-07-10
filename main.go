@@ -20,13 +20,13 @@ import (
 	"os"
 
 	"github.com/corneliusweig/rakkess/cmd"
-	"github.com/sirupsen/logrus"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/klog/v2"
 )
 
 func main() {
 	if err := cmd.Execute(); err != nil {
-		logrus.Error(err)
+		klog.Error(err)
 		os.Exit(1)
 	}
 }

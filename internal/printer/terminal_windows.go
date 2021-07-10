@@ -16,10 +16,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// NOTICE: This implementation comes from logrus, unfortunately logrus
+// NOTICE: This implementation comes from klog, unfortunately logrus
 // does not expose a public interface we can use to call it.
-//   https://github.com/sirupsen/logrus/blob/master/terminal_check_notappengine.go
-//   https://github.com/sirupsen/logrus/blob/master/terminal_windows.go
+//   https://k8s.io/klog/v2/blob/master/terminal_check_notappengine.go
+//   https://k8s.io/klog/v2/blob/master/terminal_windows.go
 
 package printer
 
@@ -31,7 +31,7 @@ import (
 	sequences "github.com/konsorten/go-windows-terminal-sequences"
 )
 
-// initTerminal enables ANSI color escape on windows. Usually, this is done by logrus, but
+// initTerminal enables ANSI color escape on windows. Usually, this is done by klog, but
 // since we don't log anything before printing, we need to take care of this ourselves.
 func initTerminal(w io.Writer) {
 	if f, ok := w.(*os.File); ok {
