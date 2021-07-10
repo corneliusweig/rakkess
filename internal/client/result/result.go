@@ -16,8 +16,6 @@ limitations under the License.
 
 package result
 
-import "io"
-
 type Access uint8
 
 // This encodes the access of the given subject to the resource+verb combination.
@@ -30,9 +28,3 @@ const (
 
 // CodeConverter converts an access code to a human-readable string.
 type CodeConverter func(Access) string
-
-// MatrixPrinter needs to be implemented by result types.
-type MatrixPrinter interface {
-	// Print writes the result for the requestedVerbs to w using the code converter.
-	Print(w io.Writer, converter CodeConverter, requestedVerbs []string)
-}

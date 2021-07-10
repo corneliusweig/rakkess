@@ -39,8 +39,14 @@ var (
 	terminit   sync.Once
 )
 
+// MatrixPrinter needs to be implemented by result types.
+type MatrixPrinter interface {
+	// Print writes the result for the requestedVerbs to w using the code converter.
+	Print(w io.Writer, converter result.CodeConverter, verbs []string)
+}
+
 // PrintResults configures the table style and delegates printing to result.MatrixPrinter.
-func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results result.MatrixPrinter) {
+func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results MatrixPrinter) {
 	w := tabwriter.NewWriter(out, 4, 8, 2, ' ', tabwriter.SmashEscape|tabwriter.StripEscape)
 	defer w.Flush()
 
