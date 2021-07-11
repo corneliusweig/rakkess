@@ -31,18 +31,16 @@ import (
 // CheckResourceAccess determines the access rights for the given GroupResources and verbs.
 // Since it needs to do a lot of requests, the SelfSubjectAccessReviewInterface needs to
 // be configured for high queries per second.
-func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) result.MatrixPrinter {
-	mu := sync.Mutex{} // guards res
-	var res []result.ResourceAccessItem
+func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReviewInterface, grs []GroupResource, verbs []string, namespace *string) result.ResourceAccess {
+	var mu sync.Mutex // guards res
+	res := make(result.ResourceAccess)
 
 	var ns string
-	if namespace == nil {
-		ns = ""
-	} else {
+	if namespace != nil {
 		ns = *namespace
 	}
 
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	for _, gr := range grs {
 		wg.Add(1)
 		// copy captured variables
@@ -63,13 +61,12 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 
 			access := make(map[string]result.Access)
 			for _, v := range verbs {
-
 				if !allowedVerbs.Has(v) {
-					access[v] = result.AccessNotApplicable
+					access[v] = result.NotApplicable
 					continue
 				}
 
-				review := &v1.SelfSubjectAccessReview{
+				req := v1.SelfSubjectAccessReview{
 					Spec: v1.SelfSubjectAccessReviewSpec{
 						ResourceAttributes: &v1.ResourceAttributes{
 							Verb:      v,
@@ -80,27 +77,24 @@ func CheckResourceAccess(ctx context.Context, sar authv1.SelfSubjectAccessReview
 					},
 				}
 
-				a := result.AccessDenied
-				r, err := sar.Create(ctx, review, metav1.CreateOptions{})
+				var a result.Access
+				resp, err := sar.Create(ctx, &req, metav1.CreateOptions{})
 				switch {
 				case err != nil:
-					a = result.AccessRequestErr
-				case r.Status.Allowed:
-					a = result.AccessAllowed
+					a = result.RequestErr
+				case resp.Status.Allowed:
+					a = result.Allowed
 				}
 				access[v] = a
 			}
 
 			mu.Lock()
-			res = append(res, result.ResourceAccessItem{
-				Name:   gr.fullName(),
-				Access: access,
-			})
+			res[gr.fullName()] = access
 			mu.Unlock()
 		}()
 	}
 
 	wg.Wait()
 
-	return result.NewResourceAccess(res)
+	return res
 }

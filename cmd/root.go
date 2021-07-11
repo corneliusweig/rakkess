@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	rakkessOptions = options.NewRakkessOptions()
+	opts = options.NewRakkessOptions()
 )
 
 const (
@@ -77,8 +77,16 @@ var rootCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		catchCtrlC(cancel)
 
-		if err := rakkess.Resource(ctx, rakkessOptions); err != nil {
+		res, err := rakkess.Resource(ctx, opts)
+		if err != nil {
 			klog.Error(err)
+		}
+
+		t := res.Table(opts.Verbs)
+		t.Render(opts.Streams.Out, opts.OutputFormat)
+
+		if n := opts.ConfigFlags.Namespace; n == nil || *n == "" {
+			fmt.Fprintf(opts.Streams.Out, "No namespace given, this implies cluster scope (try -n if this is not intended)\n")
 		}
 	},
 }
@@ -86,7 +94,7 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() error {
-	rootCmd.SetOutput(rakkessOptions.Streams.Out)
+	rootCmd.SetOutput(opts.Streams.Out)
 	return rootCmd.Execute()
 }
 
@@ -95,20 +103,20 @@ func init() {
 	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
 	AddRakkessFlags(rootCmd)
-	rootCmd.Flags().StringVar(&rakkessOptions.AsServiceAccount, constants.FlagServiceAccount, "", "similar to --as, but impersonate as service-account. The argument must be qualified <namespace>:<sa-name> or be combined with the --namespace option.")
+	rootCmd.Flags().StringVar(&opts.AsServiceAccount, constants.FlagServiceAccount, "", "similar to --as, but impersonate as service-account. The argument must be qualified <namespace>:<sa-name> or be combined with the --namespace option. Takes precedence over --as.")
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		rakkessOptions.ExpandVerbs()
+		opts.ExpandVerbs()
 	}
 	rootCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return rakkessOptions.ExpandServiceAccount()
+		return opts.ExpandServiceAccount()
 	}
 }
 
 // AddRakkessFlags sets up common flags for subcommands.
 func AddRakkessFlags(cmd *cobra.Command) {
-	cmd.Flags().StringSliceVar(&rakkessOptions.Verbs, constants.FlagVerbs, []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of (%s)", strings.Join(constants.ValidVerbs, ", ")))
-	cmd.Flags().StringVarP(&rakkessOptions.OutputFormat, constants.FlagOutput, "o", "icon-table", fmt.Sprintf("output format out of (%s)", strings.Join(constants.ValidOutputFormats, ", ")))
+	cmd.Flags().StringSliceVar(&opts.Verbs, constants.FlagVerbs, []string{"list", "create", "update", "delete"}, fmt.Sprintf("show access for verbs out of (%s)", strings.Join(constants.ValidVerbs, ", ")))
+	cmd.Flags().StringVarP(&opts.OutputFormat, constants.FlagOutput, "o", "icon-table", fmt.Sprintf("output format out of (%s)", strings.Join(constants.ValidOutputFormats, ", ")))
 
-	rakkessOptions.ConfigFlags.AddFlags(cmd.Flags())
+	opts.ConfigFlags.AddFlags(cmd.Flags())
 }

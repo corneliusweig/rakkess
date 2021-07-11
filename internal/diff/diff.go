@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Cornelius Weig
+Copyright 2021 Cornelius Weig
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,54 +14,66 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package result
+package diff
 
 import (
 	"sort"
 	"strings"
 
+	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/corneliusweig/rakkess/internal/printer"
+	"k8s.io/klog/v2"
 )
 
-// ResourceAccess holds the access result for all resources.
-type ResourceAccess map[string]map[string]Access
-
 // Print implements MatrixPrinter.Print. It prints a tab-separated table with a header.
-func (ra ResourceAccess) Table(verbs []string) *printer.Table {
-	var names []string
-	for name := range ra {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
+func Diff(left, right result.ResourceAccess, verbs []string) *printer.Table {
 	// table header
 	headers := []string{"NAME"}
 	for _, v := range verbs {
 		headers = append(headers, strings.ToUpper(v))
 	}
 
+	var names []string
+	for name := range left {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
 	p := printer.TableWithHeaders(headers)
 
-	// table body
 	for _, name := range names {
-		var outcomes []printer.Outcome
+		l, r := left[name], right[name]
+		klog.V(3).Infof("left=%v right=%v name=%s", l, r, name)
 
-		res := ra[name]
-		for _, v := range verbs {
+		skip := true
+		var outcomes []printer.Outcome
+		for _, verb := range verbs {
+			ll, rr := l[verb], r[verb]
 			var o printer.Outcome
-			switch res[v] {
-			case Denied:
-				o = printer.Down
-			case Allowed:
-				o = printer.Up
-			case NotApplicable:
-				o = printer.None
-			case RequestErr:
-				o = printer.Err
+			if ll != rr {
+				skip = false
+				if ll == result.Allowed {
+					o = printer.Up
+				}
+				if rr == result.Allowed {
+					o = printer.Down
+				}
 			}
 			outcomes = append(outcomes, o)
 		}
-		p.AddRow([]string{name}, outcomes...)
+		if skip {
+			continue
+		}
+		intro := []string{name}
+		p.AddRow(intro, outcomes...)
 	}
+
+	for name := range right {
+		if _, ok := left[name]; !ok {
+			klog.Warning("Some differences may be hidden, please swap the roles to get the full picture.")
+			break
+		}
+	}
+
 	return p
 }

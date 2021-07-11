@@ -21,55 +21,38 @@ import (
 	"io"
 	"testing"
 
-	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/stretchr/testify/assert"
 )
-
-type accessResult map[string]result.Access
-
-func buildAccess() accessResult {
-	return make(map[string]result.Access)
-}
-func (a accessResult) withResult(result result.Access, verbs ...string) accessResult {
-	for _, v := range verbs {
-		a[v] = result
-	}
-	return a
-}
-func (a accessResult) allowed(verbs ...string) accessResult {
-	return a.withResult(result.AccessAllowed, verbs...)
-}
-func (a accessResult) denied(verbs ...string) accessResult {
-	return a.withResult(result.AccessDenied, verbs...)
-}
-func (a accessResult) get() map[string]result.Access {
-	return a
-}
 
 const HEADER = "NAME       GET  LIST\n"
 
 func TestPrintResults(t *testing.T) {
 	tests := []struct {
-		name          string
-		verbs         []string
-		given         result.ResourceAccess
-		expected      string
-		expectedColor string
-		expectedASCII string
+		name      string
+		table     *Table
+		want      string
+		wantColor string
+		wantASCII string
 	}{
 		{
 			"single result, all allowed",
-			[]string{"get", "list"},
-			[]result.ResourceAccessItem{{Name: "resource1", Access: buildAccess().allowed("get", "list").get()}},
+			&Table{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Up, Up}},
+				},
+			},
 			HEADER + "resource1  ✔    ✔\n",
 			HEADER + "resource1  \033[32m✔\033[0m    \033[32m✔\033[0m\n",
 			HEADER + "resource1  yes  yes\n",
 		},
 		{
 			"single result, all forbidden",
-			[]string{"get", "list"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().denied("get", "list").get()},
+			&Table{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Down, Down}},
+				},
 			},
 			HEADER + "resource1  ✖    ✖\n",
 			HEADER + "resource1  \033[31m✖\033[0m    \033[31m✖\033[0m\n",
@@ -77,9 +60,11 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"single result, all not applicable",
-			[]string{"get", "list"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().withResult(result.AccessNotApplicable, "get", "list").get()},
+			&Table{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{None, None}},
+				},
 			},
 			HEADER + "resource1       \n",
 			HEADER + "resource1  \033[0m\033[0m     \033[0m\033[0m\n",
@@ -87,9 +72,11 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"single result, all ERR",
-			[]string{"get", "list"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().withResult(result.AccessRequestErr, "get", "list").get()},
+			&Table{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Err, Err}},
+				},
 			},
 			HEADER + "resource1  ERR  ERR\n",
 			HEADER + "resource1  \033[35mERR\033[0m  \033[35mERR\033[0m\n",
@@ -97,9 +84,11 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"single result, mixed",
-			[]string{"get", "list"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().allowed("list").denied("get").get()},
+			&Table{
+				Headers: []string{"NAME", "GET", "LIST"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Down, Up}},
+				},
 			},
 			HEADER + "resource1  ✖    ✔\n",
 			"",
@@ -107,35 +96,33 @@ func TestPrintResults(t *testing.T) {
 		},
 		{
 			"many results",
-			[]string{"get"},
-			[]result.ResourceAccessItem{
-				{Name: "resource1", Access: buildAccess().denied("get").get()},
-				{Name: "resource2", Access: buildAccess().allowed("get").get()},
-				{Name: "resource3", Access: buildAccess().denied("get").get()},
+			&Table{
+				Headers: []string{"NAME", "GET"},
+				Rows: []Row{
+					{Intro: []string{"resource1"}, Entries: []Outcome{Down}},
+					{Intro: []string{"resource2"}, Entries: []Outcome{Up}},
+					{Intro: []string{"resource3"}, Entries: []Outcome{Err}},
+				},
 			},
-			"NAME       GET\nresource1  ✖\nresource2  ✔\nresource3  ✖\n",
+			"NAME       GET\nresource1  ✖\nresource2  ✔\nresource3  ERR\n",
 			"",
-			"NAME       GET\nresource1  no\nresource2  yes\nresource3  no\n",
+			"NAME       GET\nresource1  no\nresource2  yes\nresource3  ERR\n",
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
-
-			PrintResults(buf, test.verbs, "icon-table", test.given)
-
-			assert.Equal(t, test.expected, buf.String())
+			tc.table.Render(buf, "icon-table")
+			assert.Equal(t, tc.want, buf.String())
 
 			buf = &bytes.Buffer{}
-
-			PrintResults(buf, test.verbs, "ascii-table", test.given)
-
-			assert.Equal(t, test.expectedASCII, buf.String())
+			tc.table.Render(buf, "ascii-table")
+			assert.Equal(t, tc.wantASCII, buf.String())
 		})
 	}
 
-	for _, test := range tests[0:4] {
+	for _, tc := range tests[0:4] {
 		isTerminal = func(w io.Writer) bool {
 			return true
 		}
@@ -143,18 +130,14 @@ func TestPrintResults(t *testing.T) {
 			isTerminal = isTerminalImpl
 		}()
 
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			buf := &bytes.Buffer{}
-
-			PrintResults(buf, test.verbs, "icon-table", test.given)
-
-			assert.Equal(t, test.expectedColor, buf.String())
+			tc.table.Render(buf, "icon-table")
+			assert.Equal(t, tc.wantColor, buf.String())
 
 			buf = &bytes.Buffer{}
-
-			PrintResults(buf, test.verbs, "ascii-table", test.given)
-
-			assert.Equal(t, test.expectedASCII, buf.String())
+			tc.table.Render(buf, "ascii-table")
+			assert.Equal(t, tc.wantASCII, buf.String())
 		})
 	}
 }

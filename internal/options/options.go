@@ -41,7 +41,7 @@ type RakkessOptions struct {
 // NewRakkessOptions creates RakkessOptions with defaults.
 func NewRakkessOptions() *RakkessOptions {
 	return &RakkessOptions{
-		ConfigFlags: genericclioptions.NewConfigFlags(true),
+		ConfigFlags: genericclioptions.NewConfigFlags(false),
 		Streams: &genericclioptions.IOStreams{
 			In:     os.Stdin,
 			Out:    os.Stdout,
@@ -84,16 +84,13 @@ func (o *RakkessOptions) ExpandServiceAccount() error {
 		return nil
 	}
 
-	if o.ConfigFlags.Impersonate != nil && *o.ConfigFlags.Impersonate != "" {
-		return fmt.Errorf("--%s cannot be mixed with --as", constants.FlagServiceAccount)
-	}
-
 	qualifiedServiceAccount, err := o.namespacedServiceAccount()
 	if err != nil {
 		return err
 	}
 
 	impersonate := fmt.Sprintf("system:serviceaccount:%s", qualifiedServiceAccount)
+	klog.V(2).Infof("Impersonating as %s", impersonate)
 	o.ConfigFlags.Impersonate = &impersonate
 	return nil
 }
