@@ -75,8 +75,11 @@ func (p *Table) Render(out io.Writer, outputFormat string) {
 	once.Do(func() { initTerminal(out) })
 
 	conv := humanreadableAccessCode
+	if outputFormat == "left-right" {
+		conv = leftRightAccessCode
+	}
 	if isTerminal(out) {
-		conv = colorHumanreadableAccessCode
+		conv = colored(conv)
 	}
 	if outputFormat == "ascii-table" {
 		conv = asciiAccessCode
@@ -120,22 +123,34 @@ func humanreadableAccessCode(o Outcome) string {
 	}
 }
 
-func colorHumanreadableAccessCode(o Outcome) string {
-	return fmt.Sprintf("\xff\033[%dm\xff%s\xff\033[0m\xff", codeToColor(o), humanreadableAccessCode(o))
-}
-
-func codeToColor(o Outcome) color {
+func leftRightAccessCode(o Outcome) string {
 	switch o {
 	case None:
-		return none
+		return ""
 	case Up:
-		return green
+		return "◀"
 	case Down:
-		return red
+		return "▶"
 	case Err:
-		return purple
+		return "ERR"
+	default:
+		panic("unknown access code")
 	}
-	return none
+}
+
+func colored(wrap func(Outcome) string) func(Outcome) string {
+	return func(o Outcome) string {
+		var c color = none
+		switch o {
+		case Up:
+			c = green
+		case Down:
+			c = red
+		case Err:
+			c = purple
+		}
+		return fmt.Sprintf("\xff\033[%dm\xff%s\xff\033[0m\xff", c, wrap(o))
+	}
 }
 
 func asciiAccessCode(o Outcome) string {

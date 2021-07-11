@@ -61,7 +61,7 @@ func runVersion(cmd *cobra.Command, _ []string) error {
 
 	var t = template.Must(template.New("info").Parse(tpl))
 
-	if err := t.Execute(rakkessOptions.Streams.Out, version.GetBuildInfo()); err != nil {
+	if err := t.Execute(opts.Streams.Out, version.GetBuildInfo()); err != nil {
 		return errors.Wrapf(err, "could not print version info")
 	}
 	return nil
