@@ -25,7 +25,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// Print implements MatrixPrinter.Print. It prints a tab-separated table with a header.
+// Diff takes two result sets and produces a printer that contains only the
+// diff.
 func Diff(left, right result.ResourceAccess, verbs []string) *printer.Table {
 	// table header
 	headers := []string{"NAME"}
@@ -53,19 +54,17 @@ func Diff(left, right result.ResourceAccess, verbs []string) *printer.Table {
 			if ll != rr {
 				skip = false
 				if ll == result.Allowed {
-					o = printer.Up
+					o = printer.Down
 				}
 				if rr == result.Allowed {
-					o = printer.Down
+					o = printer.Up
 				}
 			}
 			outcomes = append(outcomes, o)
 		}
-		if skip {
-			continue
+		if !skip {
+			p.AddRow([]string{name}, outcomes...)
 		}
-		intro := []string{name}
-		p.AddRow(intro, outcomes...)
 	}
 
 	for name := range right {

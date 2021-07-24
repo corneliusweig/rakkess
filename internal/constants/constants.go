@@ -22,6 +22,7 @@ const (
 	FlagServiceAccount = "sa"
 	FlagOutput         = "output"
 	FlagVerbosity      = "verbosity"
+	FlagDiffWith       = "diff-with"
 )
 
 var (

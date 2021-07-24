@@ -26,6 +26,11 @@ kubectl access-matrix
 
    _Note_: this is a shorthand for `--as system:serviceaccount:<namespace>:<sa-name>`.
 
+- `--diff-with` switches into diff mode and compares the access rights with the given modifications. The flag accepts arguments in the form `flagname=flagvalue`, where flagname is any valid `access-matrix` flag. Lines and verbs without diff are not displayed.
+
+* ✔ means that the modified settings **have access** for this resource and verb, whereas the original settings did not.
+* ✖ means that the modified settings have **no access** for this resource and verb, whereas the original settings did.
+
 ## Examples
 #### Show access to all resources
 - ... at cluster scope
@@ -57,6 +62,26 @@ kubectl access-matrix
 - ... and combine with common `kubectl` parameters
   ```bash
   KUBECONFIG=otherconfig kubectl access-matrix --context other-context
+
+#### Show diff for resource access
+
+- ... for a different service account
+  ```bash
+  kubectl access-matrix --diff-with sa=kube-system:namespace-controller
+  ```
+
+- ... for a different context
+  ```bash
+  kubectl access-matrix --diff-with context=other
+  ```
+
+- ... for a particular user in different namespaces
+  ```bash
+  kubectl access-matrix --as somebody -n default --diff-with n=kube-system
+  ```
+
+> Note: `--diff-with` accepts flags  in the form `flagname=flagvalue`
+> (without leading --). All rakkess flags can be overridden.
 
 #### Show subjects with access to a given resource
 ![rakkess demo](demo-resource-smaller.png "rakkess resource demo")

@@ -75,9 +75,6 @@ func (p *Table) Render(out io.Writer, outputFormat string) {
 	once.Do(func() { initTerminal(out) })
 
 	conv := humanreadableAccessCode
-	if outputFormat == "left-right" {
-		conv = leftRightAccessCode
-	}
 	if isTerminal(out) {
 		conv = colored(conv)
 	}
@@ -116,21 +113,6 @@ func humanreadableAccessCode(o Outcome) string {
 		return "✔" // ✓
 	case Down:
 		return "✖" // ✕
-	case Err:
-		return "ERR"
-	default:
-		panic("unknown access code")
-	}
-}
-
-func leftRightAccessCode(o Outcome) string {
-	switch o {
-	case None:
-		return ""
-	case Up:
-		return "◀"
-	case Down:
-		return "▶"
 	case Err:
 		return "ERR"
 	default:
