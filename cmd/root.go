@@ -53,7 +53,7 @@ the same flags as rakkess itself (without the leading --). The flag can be
 repeated.
 For example: --diff-with context=b --diff-with sa=kube-system:job-controller
 
-More on https://github.com/corneliusweig/rakkess/blob/v0.4.7/doc/USAGE.md#usage
+More on https://github.com/corneliusweig/rakkess/blob/v0.5.0/doc/USAGE.md#usage
 `
 
 	rakkessExamples = `
