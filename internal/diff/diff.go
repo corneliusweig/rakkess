@@ -34,7 +34,7 @@ func Diff(left, right result.ResourceAccess, verbs []string) *printer.Table {
 		headers = append(headers, strings.ToUpper(v))
 	}
 
-	var names []string
+	names := make([]string, 0, len(left))
 	for name := range left {
 		names = append(names, name)
 	}

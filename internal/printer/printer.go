@@ -122,7 +122,7 @@ func humanreadableAccessCode(o Outcome) string {
 
 func colored(wrap func(Outcome) string) func(Outcome) string {
 	return func(o Outcome) string {
-		var c color = none
+		c := none
 		switch o {
 		case Up:
 			c = green
