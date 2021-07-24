@@ -92,12 +92,6 @@ func TestRakkessOptions_ExpandServiceAccount(t *testing.T) {
 			serviceAccount: "some-ns",
 			expectedErr:    "fully qualify the serviceAccount",
 		},
-		{
-			name:           "qualified serviceAccount and impersonate",
-			serviceAccount: "some-ns",
-			impersonate:    "other-impersonatino",
-			expectedErr:    "--sa cannot be mixed with --as",
-		},
 	}
 
 	for _, test := range tests {

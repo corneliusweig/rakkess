@@ -25,15 +25,15 @@ import (
 )
 
 func TestMainHelp(t *testing.T) {
-	origOpts := rakkessOptions
+	origOpts := opts
 	newOpts, _, stdout, stderr := options.NewTestRakkessOptions()
 
 	defer func(args []string) {
 		os.Args = args
-		rakkessOptions = origOpts
+		opts = origOpts
 	}(os.Args)
 	os.Args = []string{"rakkess", "help"}
-	rakkessOptions = newOpts
+	opts = newOpts
 
 	err := Execute()
 
@@ -43,15 +43,15 @@ func TestMainHelp(t *testing.T) {
 }
 
 func TestMainUnknownCommand(t *testing.T) {
-	origOpts := rakkessOptions
+	origOpts := opts
 	newOpts, _, _, _ := options.NewTestRakkessOptions()
 
 	defer func(args []string) {
 		os.Args = args
-		rakkessOptions = origOpts
+		opts = origOpts
 	}(os.Args)
 	os.Args = []string{"rakkess", "unknown"}
-	rakkessOptions = newOpts
+	opts = newOpts
 
 	err := Execute()
 
@@ -59,15 +59,15 @@ func TestMainUnknownCommand(t *testing.T) {
 }
 
 func TestMainVersionCommand(t *testing.T) {
-	origOpts := rakkessOptions
+	origOpts := opts
 	newOpts, _, stdout, stderr := options.NewTestRakkessOptions()
 
 	defer func(args []string) {
 		os.Args = args
-		rakkessOptions = origOpts
+		opts = origOpts
 	}(os.Args)
 	os.Args = []string{"rakkess", "version", "--full"}
-	rakkessOptions = newOpts
+	opts = newOpts
 
 	err := Execute()
 

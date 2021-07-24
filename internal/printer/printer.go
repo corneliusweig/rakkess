@@ -19,9 +19,9 @@ package printer
 import (
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 
-	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/corneliusweig/tabwriter"
 )
 
@@ -36,69 +36,114 @@ const (
 
 var (
 	isTerminal = isTerminalImpl
-	terminit   sync.Once
+	once       sync.Once
 )
 
-// PrintResults configures the table style and delegates printing to result.MatrixPrinter.
-func PrintResults(out io.Writer, requestedVerbs []string, outputFormat string, results result.MatrixPrinter) {
+type Outcome uint8
+
+const (
+	None Outcome = iota
+	Up
+	Down
+	Err
+)
+
+type Row struct {
+	Intro   []string
+	Entries []Outcome
+}
+type Table struct {
+	Headers []string
+	Rows    []Row
+}
+
+func TableWithHeaders(headers []string) *Table {
+	return &Table{
+		Headers: headers,
+	}
+}
+
+func (p *Table) AddRow(intro []string, outcomes ...Outcome) {
+	row := Row{
+		Intro:   intro,
+		Entries: outcomes,
+	}
+	p.Rows = append(p.Rows, row)
+}
+
+func (p *Table) Render(out io.Writer, outputFormat string) {
+	once.Do(func() { initTerminal(out) })
+
+	conv := humanreadableAccessCode
+	if isTerminal(out) {
+		conv = colored(conv)
+	}
+	if outputFormat == "ascii-table" {
+		conv = asciiAccessCode
+	}
+
 	w := tabwriter.NewWriter(out, 4, 8, 2, ' ', tabwriter.SmashEscape|tabwriter.StripEscape)
 	defer w.Flush()
 
-	terminit.Do(func() { initTerminal(out) })
-
-	codeConverter := humanreadableAccessCode
-	if isTerminal(out) {
-		codeConverter = colorHumanreadableAccessCode
+	// table header
+	for i, h := range p.Headers {
+		if i == 0 {
+			fmt.Fprint(w, h)
+		} else {
+			fmt.Fprintf(w, "\t%s", h)
+		}
 	}
-	if outputFormat == "ascii-table" {
-		codeConverter = asciiAccessCode
-	}
+	fmt.Fprint(w, "\n")
 
-	results.Print(w, codeConverter, requestedVerbs)
+	// table body
+	for _, row := range p.Rows {
+		fmt.Fprintf(w, "%s", strings.Join(row.Intro, "\t"))
+		for _, e := range row.Entries {
+			fmt.Fprintf(w, "\t%s", conv(e)) // FIXME
+		}
+		fmt.Fprint(w, "\n")
+	}
 }
 
-func humanreadableAccessCode(code result.Access) string {
-	switch code {
-	case result.AccessAllowed:
-		return "✔" // ✓
-	case result.AccessDenied:
-		return "✖" // ✕
-	case result.AccessNotApplicable:
+func humanreadableAccessCode(o Outcome) string {
+	switch o {
+	case None:
 		return ""
-	case result.AccessRequestErr:
+	case Up:
+		return "✔" // ✓
+	case Down:
+		return "✖" // ✕
+	case Err:
 		return "ERR"
 	default:
 		panic("unknown access code")
 	}
 }
 
-func colorHumanreadableAccessCode(code result.Access) string {
-	return fmt.Sprintf("\xff\033[%dm\xff%s\xff\033[0m\xff", codeToColor(code), humanreadableAccessCode(code))
-}
-
-func codeToColor(code result.Access) color {
-	switch code {
-	case result.AccessAllowed:
-		return green
-	case result.AccessDenied:
-		return red
-	case result.AccessNotApplicable:
-		return none
-	case result.AccessRequestErr:
-		return purple
+func colored(wrap func(Outcome) string) func(Outcome) string {
+	return func(o Outcome) string {
+		c := none
+		switch o {
+		case Up:
+			c = green
+		case Down:
+			c = red
+		case Err:
+			c = purple
+		}
+		return fmt.Sprintf("\xff\033[%dm\xff%s\xff\033[0m\xff", c, wrap(o))
 	}
-	return none
 }
 
-func asciiAccessCode(code result.Access) string {
-	switch code {
-	case result.AccessAllowed:
-		return "yes"
-	case result.AccessDenied:
-		return "no"
-	case result.AccessNotApplicable:
+func asciiAccessCode(o Outcome) string {
+	switch o {
+	case None:
 		return "n/a"
-	case result.AccessRequestErr:
+	case Up:
+		return "yes"
+	case Down:
+		return "no"
+	case Err:
 		return "ERR"
 	default:
 		panic("unknown access code")

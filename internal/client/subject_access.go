@@ -75,9 +75,9 @@ func GetSubjectAccess(ctx context.Context, opts *options.RakkessOptions, resourc
 	return sa, nil
 }
 
-func resolveRoleBindings(ctx context.Context, rbacClient clientv1.RoleBindingsGetter, sa *result.SubjectAccess, namespace string) error {
+func resolveRoleBindings(ctx context.Context, cli clientv1.RoleBindingsGetter, sa *result.SubjectAccess, namespace string) error {
 	klog.V(2).Infof("fetching RoleBindings for namespace %s", namespace)
-	roleBindings, err := rbacClient.RoleBindings(namespace).List(ctx, metav1.ListOptions{})
+	roleBindings, err := cli.RoleBindings(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -91,9 +91,9 @@ func resolveRoleBindings(ctx context.Context, rbacClient clientv1.RoleBindingsGe
 	return nil
 }
 
-func resolveClusterRoleBindings(ctx context.Context, rbacClient clientv1.ClusterRoleBindingsGetter, sa *result.SubjectAccess) error {
+func resolveClusterRoleBindings(ctx context.Context, cli clientv1.ClusterRoleBindingsGetter, sa *result.SubjectAccess) error {
 	klog.V(2).Infof("fetching ClusterRoleBindings")
-	clusterRoleBindings, err := rbacClient.ClusterRoleBindings().List(ctx, metav1.ListOptions{})
+	clusterRoleBindings, err := cli.ClusterRoleBindings().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}

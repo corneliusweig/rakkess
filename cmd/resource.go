@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	rakkessSubjectLong = `
+	resourceLongHelp = `
 Show all subjects with access to a given resource
 
 This command slices the authorization space (subject, resource, verb)
@@ -42,7 +42,7 @@ group membership such as 'system:unauthenticated'.
 More on https://github.com/corneliusweig/rakkess/blob/v0.4.7/doc/USAGE.md#usage
 `
 
-	rakkessSubjectExamples = `
+	resourceExamples = `
   Review access to deployments in any namespace
    $ rakkess for deployments
    or
@@ -65,8 +65,8 @@ var resourceCmd = &cobra.Command{
 	Aliases: []string{"resource", "r"},
 	Short:   "Show all subjects with access to a given resource",
 	Args:    cobra.RangeArgs(1, 2),
-	Long:    constants.HelpTextMapName(rakkessSubjectLong),
-	Example: constants.HelpTextMapName(rakkessSubjectExamples),
+	Long:    constants.HelpTextMapName(resourceLongHelp),
+	Example: constants.HelpTextMapName(resourceExamples),
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithCancel(context.Background())
 		catchCtrlC(cancel)
@@ -76,7 +76,7 @@ var resourceCmd = &cobra.Command{
 		if len(args) == 2 {
 			resourceName = args[1]
 		}
-		if err := rakkess.Subject(ctx, rakkessOptions, resource, resourceName); err != nil {
+		if err := rakkess.Subject(ctx, opts, resource, resourceName); err != nil {
 			klog.Error(err)
 		}
 	},

@@ -18,6 +18,8 @@ package client
 
 import (
 	"context"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/corneliusweig/rakkess/internal/client/result"
@@ -38,27 +40,6 @@ func (d *SelfSubjectAccessReviewDecision) matches(other *v1.SelfSubjectAccessRev
 	return d.ResourceAttributes == *other.Spec.ResourceAttributes
 }
 
-type accessResult map[string]result.Access
-
-func buildAccess() accessResult {
-	return make(map[string]result.Access)
-}
-func (a accessResult) withResult(result result.Access, verbs ...string) accessResult {
-	for _, v := range verbs {
-		a[v] = result
-	}
-	return a
-}
-func (a accessResult) allowed(verbs ...string) accessResult {
-	return a.withResult(result.AccessAllowed, verbs...)
-}
-func (a accessResult) denied(verbs ...string) accessResult {
-	return a.withResult(result.AccessDenied, verbs...)
-}
-func (a accessResult) get() map[string]result.Access {
-	return a
-}
-
 func toGroupResource(group, name string, verbs ...string) GroupResource {
 	return GroupResource{
 		APIGroup: group,
@@ -77,7 +58,7 @@ func TestCheckResourceAccess(t *testing.T) {
 		verbs     []string
 		input     []GroupResource
 		decisions []*SelfSubjectAccessReviewDecision
-		expected  []result.ResourceAccessItem
+		want      []string
 	}{
 		{
 			name:  "single resource, single verb",
@@ -90,20 +71,16 @@ func TestCheckResourceAccess(t *testing.T) {
 						Group:    "group1",
 						Verb:     "list",
 					},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 			},
-			expected: []result.ResourceAccessItem{
-				{Name: "resource1.group1", Access: buildAccess().allowed("list").get()},
-			},
+			want: []string{"resource1.group1:list->ok"},
 		},
 		{
 			name:  "single resource, invalid verb",
 			verbs: []string{"patch"},
 			input: []GroupResource{toGroupResource("group1", "resource1", "list")},
-			expected: []result.ResourceAccessItem{
-				{Name: "resource1.group1", Access: buildAccess().withResult(result.AccessNotApplicable, "patch").get()},
-			},
+			want:  []string{"resource1.group1:patch->n/a"},
 		},
 		{
 			name:  "single resource, multiple verbs",
@@ -112,23 +89,18 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "delete"},
-					result.AccessDenied,
+					result.Denied,
 				},
 			},
-			expected: []result.ResourceAccessItem{
-				{
-					Name:   "resource1.group1",
-					Access: buildAccess().allowed("list", "create").denied("delete").get(),
-				},
-			},
+			want: []string{"resource1.group1:create->ok,delete->no,list->ok"},
 		},
 		{
 			name:  "multiple resources, single verb",
@@ -140,23 +112,14 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "list"},
-					result.AccessDenied,
+					result.Denied,
 				},
 			},
-			expected: []result.ResourceAccessItem{
-				{
-					Name:   "resource1.group1",
-					Access: buildAccess().allowed("list").get(),
-				},
-				{
-					Name:   "resource2.group1",
-					Access: buildAccess().denied("list").get(),
-				},
-			},
+			want: []string{"resource1.group1:list->ok", "resource2.group1:list->no"},
 		},
 		{
 			name:  "multiple resources, multiple verbs",
@@ -169,35 +132,22 @@ func TestCheckResourceAccess(t *testing.T) {
 			decisions: []*SelfSubjectAccessReviewDecision{
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "list"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group1", Verb: "create"},
-					result.AccessDenied,
+					result.Denied,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource2", Group: "group1", Verb: "create"},
-					result.AccessDenied,
+					result.Denied,
 				},
 				{
 					v1.ResourceAttributes{Resource: "resource1", Group: "group2", Verb: "list"},
-					result.AccessAllowed,
+					result.Allowed,
 				},
 			},
-			expected: []result.ResourceAccessItem{
-				{
-					Name:   "resource1.group1",
-					Access: buildAccess().allowed("list").denied("create").get(),
-				},
-				{
-					Name:   "resource1.group2",
-					Access: buildAccess().withResult(result.AccessNotApplicable, "create").allowed("list").get(),
-				},
-				{
-					Name:   "resource2.group1",
-					Access: buildAccess().denied("create").withResult(result.AccessNotApplicable, "list").get(),
-				},
-			},
+			want: []string{"resource1.group1:create->no,list->ok", "resource1.group2:create->n/a,list->ok", "resource2.group1:create->no,list->n/a"},
 		},
 	}
 
@@ -210,7 +160,7 @@ func TestCheckResourceAccess(t *testing.T) {
 
 					for _, d := range test.decisions {
 						if d.matches(sar) {
-							sar.Status.Allowed = d.decision == result.AccessAllowed
+							sar.Status.Allowed = d.decision == result.Allowed
 							return true, sar, nil
 						}
 					}
@@ -219,7 +169,26 @@ func TestCheckResourceAccess(t *testing.T) {
 
 			results := CheckResourceAccess(ctx, fakeReviews, test.input, test.verbs, nil)
 
-			assert.Equal(t, result.NewResourceAccess(test.expected), results)
+			var got []string
+			for name, access := range results {
+				var as []string
+				for verb, a := range access {
+					var outcome string
+					switch a {
+					case result.Allowed:
+						outcome = "ok"
+					case result.Denied:
+						outcome = "no"
+					case result.NotApplicable:
+						outcome = "n/a"
+					}
+					as = append(as, verb+"->"+outcome)
+				}
+				sort.Strings(as)
+				got = append(got, name+":"+strings.Join(as, ","))
+			}
+			sort.Strings(got)
+			assert.Equal(t, test.want, got)
 		})
 	}
 }
