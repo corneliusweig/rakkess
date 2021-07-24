@@ -39,11 +39,11 @@ jobs:
         make test
         make coverage
 
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v2
       name: Upload coverage to codecov.io
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./out/coverage.txt
+        files: ./out/coverage.txt
 
     - name: Verify build
       run: make dev
