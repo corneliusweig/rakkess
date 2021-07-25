@@ -13,7 +13,6 @@
 # limitations under the License.
 
 export GO111MODULE ?= on
-export GOARCH      ?= amd64
 export CGO_ENABLED ?= 0
 
 PROJECT   ?= rakkess
@@ -26,8 +25,14 @@ GOPATH    ?= $(shell go env GOPATH)
 BUILDDIR   := out
 PLATFORMS  ?= darwin/amd64 darwin/arm64 windows/amd64 linux/amd64
 DISTFILE   := $(BUILDDIR)/$(VERSION).tar.gz
-ASSETS     := $(BUILDDIR)/rakkess-$(GOARCH)-darwin.tar.gz $(BUILDDIR)/rakkess-$(GOARCH)-linux.tar.gz $(BUILDDIR)/rakkess-$(GOARCH)-windows.zip
-ASSETSKREW := $(BUILDDIR)/access-matrix-$(GOARCH)-darwin.tar.gz $(BUILDDIR)/access-matrix-$(GOARCH)-linux.tar.gz $(BUILDDIR)/access-matrix-$(GOARCH)-windows.zip
+ASSETS     := $(BUILDDIR)/rakkess-amd64-darwin.tar.gz \
+              $(BUILDDIR)/rakkess-arm64-darwin.tar.gz \
+              $(BUILDDIR)/rakkess-amd64-linux.tar.gz \
+              $(BUILDDIR)/rakkess-amd64-windows.zip
+ASSETSKREW := $(BUILDDIR)/access-matrix-amd64-darwin.tar.gz \
+              $(BUILDDIR)/access-matrix-arm64-darwin.tar.gz \
+              $(BUILDDIR)/access-matrix-amd64-linux.tar.gz \
+              $(BUILDDIR)/access-matrix-amd64-windows.zip
 CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS) $(ASSETSKREW))
 
 VERSION_PACKAGE := $(REPOPATH)/internal/version
