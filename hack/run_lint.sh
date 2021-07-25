@@ -26,6 +26,7 @@ then
 fi
 
 "$GOPATH/bin/golangci-lint" run \
+		--timeout 2m \
 		--no-config \
 		-D errcheck \
 		-E goconst \
