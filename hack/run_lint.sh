@@ -43,5 +43,4 @@ fi
 		-E stylecheck \
 		-E staticcheck \
 		-E structcheck \
-		-E prealloc \
 		--skip-dirs hack
