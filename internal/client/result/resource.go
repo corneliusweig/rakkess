@@ -28,7 +28,7 @@ type ResourceAccess map[string]map[string]Access
 
 // Print implements MatrixPrinter.Print. It prints a tab-separated table with a header.
 func (ra ResourceAccess) Table(verbs []string) *printer.Table {
-	names := make([]string, len(ra))
+	var names []string
 	for name := range ra {
 		names = append(names, name)
 	}
