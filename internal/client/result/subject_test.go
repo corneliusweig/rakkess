@@ -22,6 +22,7 @@ import (
 	"github.com/corneliusweig/rakkess/internal/constants"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -30,6 +31,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 		Name: "some-role",
 		Kind: "some-kind",
 	}
+	apiGroup := "apps"
 	resource := "deployments"
 	tests := []struct {
 		name          string
@@ -41,6 +43,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 		{
 			name: "simple rule",
 			rule: v1.PolicyRule{
+				APIGroups: []string{apiGroup},
 				Resources: []string{resource},
 				Verbs:     []string{"create", "get"},
 			},
@@ -50,6 +53,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 			name:         "simple rule with initial verbs",
 			initialVerbs: []string{"initial", "other"},
 			rule: v1.PolicyRule{
+				APIGroups: []string{apiGroup},
 				Resources: []string{resource},
 				Verbs:     []string{"create", "get"},
 			},
@@ -58,6 +62,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 		{
 			name: "rule for multiple resources",
 			rule: v1.PolicyRule{
+				APIGroups: []string{apiGroup},
 				Resources: []string{"resource-other", resource, "resource-yet-another"},
 				Verbs:     []string{"create", "get"},
 			},
@@ -66,6 +71,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 		{
 			name: "no matching resource",
 			rule: v1.PolicyRule{
+				APIGroups: []string{apiGroup},
 				Resources: []string{"resource-other", "resource-yet-another"},
 				Verbs:     []string{"create", "get"},
 			},
@@ -73,6 +79,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 		{
 			name: "VerbAll",
 			rule: v1.PolicyRule{
+				APIGroups: []string{apiGroup},
 				Resources: []string{resource},
 				Verbs:     []string{v1.VerbAll},
 			},
@@ -81,6 +88,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 		{
 			name: "simple rule with resourceNames does not match",
 			rule: v1.PolicyRule{
+				APIGroups:     []string{apiGroup},
 				Resources:     []string{resource},
 				ResourceNames: []string{"no-match"},
 				Verbs:         []string{"create", "get"},
@@ -90,6 +98,7 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 			name:         "simple rule with matching resourceName",
 			resourceName: "my-resource-name",
 			rule: v1.PolicyRule{
+				APIGroups:     []string{apiGroup},
 				Resources:     []string{resource},
 				ResourceNames: []string{"my-resource-name"},
 				Verbs:         []string{"create", "get"},
@@ -100,16 +109,35 @@ func TestSubjectAccess_MatchRules(t *testing.T) {
 			name:         "simple rule with wrong resourceName",
 			resourceName: "my-resource-name",
 			rule: v1.PolicyRule{
+				APIGroups:     []string{apiGroup},
 				Resources:     []string{resource},
 				ResourceNames: []string{"wrong-resource-name"},
 				Verbs:         []string{"create", "get"},
 			},
 		},
+		{
+			name: "non-matching API group",
+			rule: v1.PolicyRule{
+				APIGroups: []string{"nonmatchingapigroup"},
+				Resources: []string{resource},
+				Verbs:     []string{"create", "get"},
+			},
+		},
+		{
+			name: "match star API group",
+			rule: v1.PolicyRule{
+				APIGroups: []string{"*"},
+				Resources: []string{resource},
+				Verbs:     []string{"create", "get"},
+			},
+			expectedVerbs: []string{"create", "get"},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			sa := NewSubjectAccess(resource, test.resourceName)
+			gr := schema.GroupResource{Group: apiGroup, Resource: resource}
+			sa := NewSubjectAccess(gr, test.resourceName)
 			if test.initialVerbs != nil {
 				sa.roleToVerbs[r] = sets.NewString(test.initialVerbs...)
 			}

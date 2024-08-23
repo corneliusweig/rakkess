@@ -22,6 +22,7 @@ import (
 	"github.com/corneliusweig/rakkess/internal/client/result"
 	"github.com/corneliusweig/rakkess/internal/options"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
 	"k8s.io/klog/v2"
 )
@@ -37,7 +38,7 @@ const (
 )
 
 // GetSubjectAccess determines subjects with access to the given resource.
-func GetSubjectAccess(ctx context.Context, opts *options.RakkessOptions, resource, resourceName string) (*result.SubjectAccess, error) {
+func GetSubjectAccess(ctx context.Context, opts *options.RakkessOptions, gr schema.GroupResource, resourceName string) (*result.SubjectAccess, error) {
 	rbacClient, err := getRbacClient(opts)
 	if err != nil {
 		return nil, err
@@ -46,7 +47,7 @@ func GetSubjectAccess(ctx context.Context, opts *options.RakkessOptions, resourc
 	namespace := opts.ConfigFlags.Namespace
 	isNamespace := namespace != nil && *namespace != ""
 
-	sa := result.NewSubjectAccess(resource, resourceName)
+	sa := result.NewSubjectAccess(gr, resourceName)
 
 	if err := fetchMatchingClusterRoles(ctx, rbacClient, sa); err != nil {
 		if !isNamespace {

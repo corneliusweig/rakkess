@@ -80,7 +80,12 @@ func FetchAvailableGroupResources(opts *options.RakkessOptions) ([]GroupResource
 			klog.Warningf("Cannot parse groupVersion: %s", err)
 			continue
 		}
-		for _, r := range list.APIResources {
+		resourceListWithSubresources, err := client.ServerResourcesForGroupVersion(list.GroupVersion)
+		if err != nil {
+			klog.Warningf("Cannot parse get all resources for gv: %s %s", list.GroupVersion, err)
+			continue
+		}
+		for _, r := range resourceListWithSubresources.APIResources {
 			if len(r.Verbs) == 0 {
 				continue
 			}

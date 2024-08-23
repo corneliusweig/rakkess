@@ -27,6 +27,7 @@ import (
 	v1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	clientv1 "k8s.io/client-go/kubernetes/typed/rbac/v1"
@@ -46,6 +47,7 @@ func TestGetSubjectAccess(t *testing.T) {
 		name                string
 		namespace           string
 		resource            string
+		apiGroup            string
 		clusterRoles        []v1.ClusterRole
 		clusterRoleBindings []v1.ClusterRoleBinding
 		roles               []v1.Role
@@ -55,10 +57,11 @@ func TestGetSubjectAccess(t *testing.T) {
 		{
 			name:                "cluster-role and role matches",
 			namespace:           roleNamespace,
+			apiGroup:            "apps",
 			resource:            "deployments",
-			clusterRoles:        clusterRoles("deployments", "create"),
+			clusterRoles:        clusterRoles("apps", "deployments", "create"),
 			clusterRoleBindings: clusterRoleBindings("test-user"),
-			roles:               roles("deployments", "list"),
+			roles:               roles("apps", "deployments", "list"),
 			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
 			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: subjectKind}: sets.NewString("create", "list"),
@@ -67,10 +70,11 @@ func TestGetSubjectAccess(t *testing.T) {
 		{
 			name:                "cluster-role and role matches, multiple subjects",
 			namespace:           roleNamespace,
+			apiGroup:            "apps",
 			resource:            "deployments",
-			clusterRoles:        clusterRoles("deployments", "create"),
+			clusterRoles:        clusterRoles("apps", "deployments", "create"),
 			clusterRoleBindings: clusterRoleBindings("user1", "user2"),
-			roles:               roles("deployments", "list"),
+			roles:               roles("apps", "deployments", "list"),
 			roleBindings:        roleBindings(testRoleName, roleName, "user2", "user3"),
 			expected: map[result.SubjectRef]sets.String{
 				{Name: "user1", Kind: subjectKind}: sets.NewString("create"),
@@ -81,10 +85,11 @@ func TestGetSubjectAccess(t *testing.T) {
 		{
 			name:                "cluster-role and role matches, global scope",
 			namespace:           "", // empty namespace means global scope
+			apiGroup:            "apps",
 			resource:            "deployments",
-			clusterRoles:        clusterRoles("deployments", "create"),
+			clusterRoles:        clusterRoles("apps", "deployments", "create"),
 			clusterRoleBindings: clusterRoleBindings("test-user"),
-			roles:               roles("deployments", "list"),
+			roles:               roles("apps", "deployments", "list"),
 			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
 			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: subjectKind}: sets.NewString("create"),
@@ -93,8 +98,9 @@ func TestGetSubjectAccess(t *testing.T) {
 		{
 			name:         "rolebinding to clusterrole",
 			namespace:    roleNamespace,
+			apiGroup:     "apps",
 			resource:     "deployments",
-			clusterRoles: clusterRoles("deployments", "create"),
+			clusterRoles: clusterRoles("apps", "deployments", "create"),
 			roleBindings: roleBindings(testClusterRoleName, clusterRoleName, "test-user"),
 			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: subjectKind}: sets.NewString("create"),
@@ -103,20 +109,22 @@ func TestGetSubjectAccess(t *testing.T) {
 		{
 			name:                "bindings for wrong resource",
 			namespace:           roleNamespace,
+			apiGroup:            "apps",
 			resource:            "deployments",
-			clusterRoles:        clusterRoles("configmaps", "create"),
+			clusterRoles:        clusterRoles("", "configmaps", "create"),
 			clusterRoleBindings: clusterRoleBindings("test-user"),
-			roles:               roles("configmaps", "list"),
+			roles:               roles("", "configmaps", "list"),
 			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
 			expected:            map[result.SubjectRef]sets.String{},
 		},
 		{
 			name:                "VerbAll role binding",
 			namespace:           roleNamespace,
+			apiGroup:            "",
 			resource:            "configmaps",
-			clusterRoles:        clusterRoles("configmaps", "create"),
+			clusterRoles:        clusterRoles("", "configmaps", "create"),
 			clusterRoleBindings: clusterRoleBindings("test-user"),
-			roles:               roles("configmaps", v1.VerbAll),
+			roles:               roles("", "configmaps", v1.VerbAll),
 			roleBindings:        roleBindings(testRoleName, roleName, "test-user"),
 			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: subjectKind}: sets.NewString(constants.ValidVerbs...),
@@ -125,8 +133,9 @@ func TestGetSubjectAccess(t *testing.T) {
 		{
 			name:                "VerbAll clusterrole binding",
 			namespace:           roleNamespace,
+			apiGroup:            "",
 			resource:            "configmaps",
-			clusterRoles:        clusterRoles("configmaps", v1.VerbAll),
+			clusterRoles:        clusterRoles("", "configmaps", v1.VerbAll),
 			clusterRoleBindings: clusterRoleBindings("test-user"),
 			expected: map[result.SubjectRef]sets.String{
 				{Name: "test-user", Kind: subjectKind}: sets.NewString(constants.ValidVerbs...),
@@ -166,15 +175,17 @@ func TestGetSubjectAccess(t *testing.T) {
 					Namespace: &test.namespace,
 				},
 			}
-			sa, err := GetSubjectAccess(ctx, opts, test.resource, "")
+			gr := schema.GroupResource{Group: test.apiGroup, Resource: test.resource}
+			sa, err := GetSubjectAccess(ctx, opts, gr, "")
 			assert.NoError(t, err)
-			assert.Equal(t, test.resource, sa.Resource)
+			assert.Equal(t, test.resource, sa.GroupResource.Resource)
+			assert.Equal(t, test.apiGroup, sa.GroupResource.Group)
 			assert.Equal(t, test.expected, sa.Get())
 		})
 	}
 }
 
-func clusterRoles(resource string, verbs ...string) []v1.ClusterRole {
+func clusterRoles(apiGroup, resource string, verbs ...string) []v1.ClusterRole {
 	return []v1.ClusterRole{
 		{
 			ObjectMeta: metav1.ObjectMeta{
@@ -182,6 +193,7 @@ func clusterRoles(resource string, verbs ...string) []v1.ClusterRole {
 			},
 			Rules: []v1.PolicyRule{
 				{
+					APIGroups: []string{apiGroup},
 					Verbs:     verbs,
 					Resources: []string{resource},
 				},
@@ -209,7 +221,7 @@ func clusterRoleBindings(subjects ...string) []v1.ClusterRoleBinding {
 	}
 }
 
-func roles(resource string, verbs ...string) []v1.Role {
+func roles(apiGroup, resource string, verbs ...string) []v1.Role {
 	return []v1.Role{
 		{
 			ObjectMeta: metav1.ObjectMeta{
@@ -218,6 +230,7 @@ func roles(resource string, verbs ...string) []v1.Role {
 			},
 			Rules: []v1.PolicyRule{
 				{
+					APIGroups: []string{apiGroup},
 					Verbs:     verbs,
 					Resources: []string{resource},
 				},

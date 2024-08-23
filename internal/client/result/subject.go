@@ -23,6 +23,7 @@ import (
 	"github.com/corneliusweig/rakkess/internal/constants"
 	"github.com/corneliusweig/rakkess/internal/printer"
 	v1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -39,8 +40,8 @@ type SubjectRef struct {
 
 // SubjectAccess holds the access information of all subjects for the given resource.
 type SubjectAccess struct {
-	// Resource is the kubernetes resource of this query.
-	Resource string
+	// GroupResource is the kubernetes GroupResource of this query.
+	GroupResource schema.GroupResource
 	// ResourceName is the name of the kubernetes resource instance of this query.
 	ResourceName string
 	// roleToVerbs holds all rule data concerning this resource and is extracted from Roles and ClusterRoles.
@@ -50,9 +51,9 @@ type SubjectAccess struct {
 }
 
 // NewSubjectAccess creates a new SubjectAccess with initialized fields.
-func NewSubjectAccess(resource, resourceName string) *SubjectAccess {
+func NewSubjectAccess(gr schema.GroupResource, resourceName string) *SubjectAccess {
 	return &SubjectAccess{
-		Resource:       resource,
+		GroupResource:  gr,
 		ResourceName:   resourceName,
 		roleToVerbs:    make(map[RoleRef]sets.String),
 		subjectToVerbs: make(map[SubjectRef]sets.String),
@@ -99,8 +100,14 @@ func (sa *SubjectAccess) MatchRules(ref RoleRef, rule v1.PolicyRule) {
 		return
 	}
 
+	// if the query is for "deployments.apps" GroupResource, ignore a PolicyRule which applies to resource
+	// "deployment", but API group "foo".
+	if !apiGroupMatches(rule.APIGroups, sa.GroupResource.Group) {
+		return
+	}
+
 	for _, r := range rule.Resources {
-		if r == v1.ResourceAll || r == sa.Resource {
+		if r == v1.ResourceAll || r == sa.GroupResource.Resource {
 			expandedVerbs := expand(rule.Verbs)
 			if verbs, ok := sa.roleToVerbs[ref]; ok {
 				sa.roleToVerbs[ref] = sets.NewString(expandedVerbs...).Union(verbs)
@@ -109,6 +116,15 @@ func (sa *SubjectAccess) MatchRules(ref RoleRef, rule v1.PolicyRule) {
 			}
 		}
 	}
+}
+
+func apiGroupMatches(entries []string, target string) bool {
+	for _, entry := range entries {
+		if entry == "*" || entry == target {
+			return true
+		}
+	}
+	return false
 }
 
 func includes(coll []string, x string) bool {

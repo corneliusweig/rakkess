@@ -61,7 +61,7 @@ func (c *fakeCachedDiscoveryInterface) ServerGroupsAndResources() ([]*metav1.API
 }
 
 func (c *fakeCachedDiscoveryInterface) ServerResourcesForGroupVersion(groupVersion string) (*metav1.APIResourceList, error) {
-	panic("not implemented")
+	return &c.next, nil
 }
 
 func (c *fakeCachedDiscoveryInterface) ServerResources() ([]*metav1.APIResourceList, error) {

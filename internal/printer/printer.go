@@ -93,7 +93,9 @@ func (p *Table) Render(out io.Writer, outputFormat string) {
 			fmt.Fprintf(w, "\t%s", h)
 		}
 	}
-	fmt.Fprint(w, "\n")
+	if len(p.Headers) != 0 {
+		fmt.Fprint(w, "\n")
+	}
 
 	// table body
 	for _, row := range p.Rows {
