@@ -37,6 +37,14 @@ var (
 		"patch",
 		"delete",
 		"deletecollection",
+		"approve",
+		"proxy",
+		"sign",
+		"attest",
+		"use",
+		"bind",
+		"impersonate",
+		"escalate",
 	}
 
 	// ValidOutputFormats is the list of valid formats for the result table.
