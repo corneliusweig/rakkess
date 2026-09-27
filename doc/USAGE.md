@@ -30,6 +30,7 @@ kubectl access-matrix
 
 * ✔ means that the modified settings **have access** for this resource and verb, whereas the original settings did not.
 * ✖ means that the modified settings have **no access** for this resource and verb, whereas the original settings did.
+* `ERR` means that an access review failed on either side. The access change is unknown, including when both reviews failed.
 
 ## Examples
 #### Show access to all resources

@@ -51,7 +51,10 @@ func Diff(left, right result.ResourceAccess, verbs []string) *printer.Table {
 		for _, verb := range verbs {
 			ll, rr := l[verb], r[verb]
 			var o printer.Outcome
-			if ll != rr {
+			if ll == result.RequestErr || rr == result.RequestErr {
+				skip = false
+				o = printer.Err
+			} else if ll != rr {
 				skip = false
 				if ll == result.Allowed {
 					o = printer.Down
